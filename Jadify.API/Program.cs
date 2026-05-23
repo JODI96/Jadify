@@ -30,10 +30,10 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(opts =>
 
 // Step 4 — cross-cutting infrastructure
 builder.Services.AddJadifyAuthentication(builder.Configuration);
-builder.Services.AddJadifyInfrastructure(builder.Configuration);
+builder.Services.AddJadifyInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddJadifyValidation();
 builder.Services.AddJadifyCors(builder.Configuration);
-builder.Services.AddJadifyFeatureServices();
+builder.Services.AddJadifyFeatureServices(builder.Configuration);
 
 var app = builder.Build();
 

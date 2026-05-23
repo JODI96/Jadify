@@ -55,7 +55,7 @@ public static class ServiceCollectionExtensions
 
     /// <summary>Registers Stripe, Azure Blob Storage, and SendGrid clients as singletons.</summary>
     public static IServiceCollection AddJadifyInfrastructure(
-        this IServiceCollection services, IConfiguration config)
+        this IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         // --- Stripe ---
         var stripeKey = config["Stripe:SecretKey"] ?? string.Empty;
@@ -68,9 +68,11 @@ public static class ServiceCollectionExtensions
             services.AddSingleton(_ => new BlobServiceClient(blobConnStr));
 
         // --- SendGrid ---
-        // Always register so DI validation passes at startup; empty key = emails no-op in dev.
         var sgKey = config["SendGrid:ApiKey"] ?? string.Empty;
-        services.AddSingleton<ISendGridClient>(_ => new SendGridClient(sgKey));
+        if (env.IsProduction() && string.IsNullOrWhiteSpace(sgKey))
+            throw new InvalidOperationException("SendGrid:ApiKey is required in production");
+        if (!string.IsNullOrWhiteSpace(sgKey))
+            services.AddSingleton<ISendGridClient>(_ => new SendGridClient(sgKey));
 
         return services;
     }
@@ -105,11 +107,15 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Registers all feature-level services. Each step below adds its own registrations.
     /// </summary>
-    public static IServiceCollection AddJadifyFeatureServices(this IServiceCollection services)
+    public static IServiceCollection AddJadifyFeatureServices(this IServiceCollection services, IConfiguration config)
     {
         // Step 5
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IEmailService, SendGridEmailService>();
+        var sgKey = config["SendGrid:ApiKey"] ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(sgKey))
+            services.AddScoped<IEmailService, SendGridEmailService>();
+        else
+            services.AddScoped<IEmailService, NullEmailService>();
 
         // Step 6
         services.AddScoped<IBusinessService, BusinessService>();
