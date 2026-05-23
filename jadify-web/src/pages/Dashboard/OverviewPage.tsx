@@ -45,14 +45,14 @@ export function OverviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400">Loading…</div>
+      <div className="flex items-center justify-center h-64 text-gray-400">Wird geladen…</div>
     )
   }
 
   if (error || !data) {
     return (
       <div className="flex items-center justify-center h-64 text-red-500 text-sm">
-        Failed to load dashboard. Check your connection.
+        Dashboard konnte nicht geladen werden. Verbindung prüfen.
       </div>
     )
   }
@@ -62,29 +62,29 @@ export function OverviewPage() {
 
   return (
     <div className="px-8 py-8 max-w-5xl">
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">Overview</h1>
+      <h1 className="text-xl font-semibold text-gray-900 mb-6">Übersicht</h1>
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <KpiCard label="Today's Bookings" value={String(data.todayBookingCount)} />
-        <KpiCard label="Upcoming" value={String(data.upcomingBookingCount)} />
+        <KpiCard label="Buchungen heute" value={String(data.todayBookingCount)} />
+        <KpiCard label="Bevorstehend" value={String(data.upcomingBookingCount)} />
         <KpiCard
-          label="Revenue This Month"
+          label="Umsatz diesen Monat"
           value={`CHF ${data.revenueThisMonth.toFixed(2)}`}
-          sub={`${growthSign}${data.revenueGrowthPercent}% vs last month`}
+          sub={`${growthSign}${data.revenueGrowthPercent}% vs. letzten Monat`}
           subColor={growthColor}
         />
         <KpiCard
-          label="Last Month Revenue"
+          label="Umsatz letzten Monat"
           value={`CHF ${data.revenueLastMonth.toFixed(2)}`}
         />
         <KpiCard
-          label="Cancellation Rate"
+          label="Stornierungsrate"
           value={`${data.cancellationRatePercent}%`}
-          sub="Last 30 days"
+          sub="Letzte 30 Tage"
         />
         <KpiCard
-          label="Total Customers"
+          label="Kunden gesamt"
           value={String(data.totalCustomers)}
         />
       </div>
@@ -92,19 +92,19 @@ export function OverviewPage() {
       {/* Today's schedule */}
       <div className="bg-white border border-gray-200 rounded-xl">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-700">Today's Schedule</h2>
+          <h2 className="text-sm font-semibold text-gray-700">Heutiger Tagesplan</h2>
         </div>
         {data.todaySchedule.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-gray-400">No bookings today</div>
+          <div className="px-5 py-8 text-center text-sm text-gray-400">Heute keine Buchungen</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
-                  <th className="px-5 py-3 text-left font-medium">Time</th>
-                  <th className="px-5 py-3 text-left font-medium">Customer</th>
-                  <th className="px-5 py-3 text-left font-medium">Service</th>
-                  <th className="px-5 py-3 text-left font-medium">Staff</th>
+                  <th className="px-5 py-3 text-left font-medium">Zeit</th>
+                  <th className="px-5 py-3 text-left font-medium">Kunde</th>
+                  <th className="px-5 py-3 text-left font-medium">Leistung</th>
+                  <th className="px-5 py-3 text-left font-medium">Mitarbeiter</th>
                   <th className="px-5 py-3 text-left font-medium">Status</th>
                 </tr>
               </thead>

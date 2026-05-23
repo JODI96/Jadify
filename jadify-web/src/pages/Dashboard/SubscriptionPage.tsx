@@ -14,22 +14,22 @@ interface TierInfo {
 const TIERS: TierInfo[] = [
   {
     name: 'Free',
-    price: 'CHF 0/mo',
-    fee: '2% per booking',
-    features: ['Unlimited bookings', 'Customer emails', 'Public booking page'],
+    price: 'CHF 0/Monat',
+    fee: '2% pro Buchung',
+    features: ['Unbegrenzte Buchungen', 'Kunden-E-Mails', 'Öffentliche Buchungsseite'],
   },
   {
     name: 'Growth',
-    price: 'CHF 29/mo',
-    fee: '0.5% per booking',
-    features: ['Everything in Free', 'Logo upload', 'Priority support'],
+    price: 'CHF 29/Monat',
+    fee: '0.5% pro Buchung',
+    features: ['Alles in Free', 'Logo hochladen', 'Priority-Support'],
     highlight: true,
   },
   {
     name: 'Pro',
-    price: 'CHF 79/mo',
-    fee: '0% platform fee',
-    features: ['Everything in Growth', 'Advanced analytics', 'API access', 'Dedicated support'],
+    price: 'CHF 79/Monat',
+    fee: '0% Plattformgebühr',
+    features: ['Alles in Growth', 'Erweiterte Analysen', 'API-Zugang', 'Persönlicher Support'],
   },
 ]
 
@@ -69,7 +69,7 @@ export function SubscriptionPage() {
   })
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64 text-gray-400">Loading…</div>
+    return <div className="flex items-center justify-center h-64 text-gray-400">Wird geladen…</div>
   }
 
   const currentTier = sub?.tier ?? 'Free'
@@ -77,18 +77,18 @@ export function SubscriptionPage() {
 
   return (
     <div className="px-8 py-8 max-w-4xl">
-      <h1 className="text-xl font-semibold text-gray-900 mb-2">Subscription</h1>
+      <h1 className="text-xl font-semibold text-gray-900 mb-2">Abonnement</h1>
 
       {/* Current status */}
       {sub && (
         <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center justify-between text-sm">
           <div>
-            <span className="text-indigo-600 font-medium">Current plan: {sub.tier}</span>
+            <span className="text-indigo-600 font-medium">Aktueller Plan: {sub.tier}</span>
             {sub.currentPeriodEnd && (
-              <span className="text-indigo-500 ml-3">· Renews {formatDate(sub.currentPeriodEnd)}</span>
+              <span className="text-indigo-500 ml-3">· Verlängert sich am {formatDate(sub.currentPeriodEnd)}</span>
             )}
             {sub.cancelAtPeriodEnd && (
-              <span className="text-red-500 ml-3">· Cancels {formatDate(sub.currentPeriodEnd)}</span>
+              <span className="text-red-500 ml-3">· Endet am {formatDate(sub.currentPeriodEnd)}</span>
             )}
           </div>
           {isPaid && !sub.cancelAtPeriodEnd && (
@@ -96,7 +96,7 @@ export function SubscriptionPage() {
               onClick={() => setConfirmCancel(true)}
               className="text-sm text-red-500 hover:text-red-700 underline"
             >
-              Cancel subscription
+              Abonnement kündigen
             </button>
           )}
         </div>
@@ -123,7 +123,7 @@ export function SubscriptionPage() {
             >
               {tier.highlight && (
                 <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-2">
-                  Popular
+                  Beliebt
                 </span>
               )}
               <h3 className="text-base font-semibold text-gray-900">{tier.name}</h3>
@@ -141,11 +141,11 @@ export function SubscriptionPage() {
 
               {isCurrent ? (
                 <div className="w-full py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium text-center">
-                  Current plan
+                  Aktueller Plan
                 </div>
               ) : tier.name === 'Free' ? (
                 <div className="w-full py-2 rounded-lg bg-gray-50 text-gray-400 text-sm text-center">
-                  Downgrade via cancel
+                  Wechsel via Kündigung
                 </div>
               ) : (
                 <button
@@ -155,7 +155,7 @@ export function SubscriptionPage() {
                   }
                   className="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
                 >
-                  {busy ? 'Processing…' : isCurrent ? 'Current' : isPaid ? 'Switch' : 'Upgrade'}
+                  {busy ? 'Wird verarbeitet…' : isPaid ? 'Wechseln' : 'Upgraden'}
                 </button>
               )}
             </div>
@@ -167,23 +167,23 @@ export function SubscriptionPage() {
       {confirmCancel && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Cancel subscription?</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Abonnement kündigen?</h3>
             <p className="text-sm text-gray-500 mb-5">
-              Your plan stays active until {formatDate(sub?.currentPeriodEnd)}. After that you'll be moved to the Free tier.
+              Dein Plan bleibt bis {formatDate(sub?.currentPeriodEnd)} aktiv. Danach wechselst du automatisch zum Free-Tarif.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmCancel(false)}
                 className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-gray-300"
               >
-                Keep plan
+                Plan behalten
               </button>
               <button
                 onClick={() => cancelSub.mutate()}
                 disabled={cancelSub.isPending}
                 className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
               >
-                {cancelSub.isPending ? 'Cancelling…' : 'Confirm cancel'}
+                {cancelSub.isPending ? 'Wird gekündigt…' : 'Kündigung bestätigen'}
               </button>
             </div>
           </div>

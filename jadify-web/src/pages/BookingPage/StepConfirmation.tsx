@@ -22,33 +22,33 @@ export function StepConfirmation({ state, business }: Props) {
         </svg>
       </div>
 
-      <h2 className="text-2xl font-semibold text-gray-900 mb-2">Booking Confirmed!</h2>
+      <h2 className="text-2xl font-semibold text-gray-900 mb-2">Buchung bestätigt!</h2>
       <p className="text-gray-500 mb-6">
-        A confirmation has been sent to <span className="font-medium text-gray-700">{state.customerEmail}</span>
+        Eine Bestätigung wurde an <span className="font-medium text-gray-700">{state.customerEmail}</span> gesendet.
       </p>
 
       <div className="bg-white border border-gray-200 rounded-xl p-5 text-left max-w-sm mx-auto">
         <dl className="grid gap-3 text-sm">
           <div>
-            <dt className="text-gray-500">Business</dt>
+            <dt className="text-gray-500">Unternehmen</dt>
             <dd className="font-medium text-gray-900">{business.name}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Service</dt>
+            <dt className="text-gray-500">Leistung</dt>
             <dd className="font-medium text-gray-900">{state.service?.name}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Staff</dt>
+            <dt className="text-gray-500">Mitarbeiter</dt>
             <dd className="font-medium text-gray-900">{state.staff?.name}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Date & Time</dt>
+            <dt className="text-gray-500">Datum & Zeit</dt>
             <dd className="font-medium text-gray-900">
               {state.startTime && formatDateTime(state.startTime)}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Amount paid</dt>
+            <dt className="text-gray-500">Bezahlter Betrag</dt>
             <dd className="font-medium text-gray-900">CHF {state.service?.price.toFixed(2)}</dd>
           </div>
         </dl>
@@ -58,7 +58,7 @@ export function StepConfirmation({ state, business }: Props) {
         onClick={() => window.location.reload()}
         className="mt-6 text-sm text-indigo-600 hover:text-indigo-800 underline"
       >
-        Book another appointment
+        Weiteren Termin buchen
       </button>
     </div>
   )

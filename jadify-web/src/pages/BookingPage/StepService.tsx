@@ -10,9 +10,9 @@ export function StepService({ services, onSelect }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Choose a Service</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Leistung wählen</h2>
       {active.length === 0 && (
-        <p className="text-gray-500">No services available at this time.</p>
+        <p className="text-gray-500">Momentan keine Leistungen verfügbar.</p>
       )}
       <div className="grid gap-3">
         {active.map(service => (

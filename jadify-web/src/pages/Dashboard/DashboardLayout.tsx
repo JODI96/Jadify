@@ -2,9 +2,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/authStore'
 
 const NAV = [
-  { to: '/dashboard/overview', label: 'Overview', icon: '▦' },
-  { to: '/dashboard/bookings', label: 'Bookings', icon: '📅' },
-  { to: '/dashboard/subscription', label: 'Subscription', icon: '⭐' },
+  { to: '/dashboard/overview', label: 'Übersicht', icon: '▦' },
+  { to: '/dashboard/bookings', label: 'Buchungen', icon: '📅' },
+  { to: '/dashboard/subscription', label: 'Abonnement', icon: '⭐' },
 ]
 
 export function DashboardLayout() {
@@ -48,7 +48,7 @@ export function DashboardLayout() {
             onClick={handleLogout}
             className="w-full text-left text-sm text-gray-500 hover:text-red-600 transition-colors"
           >
-            Sign out
+            Abmelden
           </button>
         </div>
       </aside>

@@ -53,7 +53,7 @@ export function StepPayment(props: Props) {
 
   if (creating) {
     return (
-      <div className="text-center py-12 text-gray-500">Creating booking…</div>
+      <div className="text-center py-12 text-gray-500">Buchung wird erstellt…</div>
     )
   }
 
@@ -64,7 +64,7 @@ export function StepPayment(props: Props) {
           {createError}
         </div>
         <button onClick={props.onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
-          ← Back
+          ← Zurück
         </button>
       </div>
     )
@@ -73,12 +73,12 @@ export function StepPayment(props: Props) {
   if (!clientSecret) {
     return (
       <div>
-        <p className="text-sm text-gray-600 mb-4">Booking created — no payment required.</p>
+        <p className="text-sm text-gray-600 mb-4">Buchung erstellt — keine Zahlung erforderlich.</p>
         <button
           onClick={props.onComplete}
           className="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
-          Confirm Booking
+          Buchung bestätigen
         </button>
       </div>
     )
@@ -133,7 +133,7 @@ function PaymentForm({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Payment</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-1">Zahlung</h2>
 
       {/* Order summary */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-5 text-sm">
@@ -159,14 +159,14 @@ function PaymentForm({
             disabled={paying}
             className="text-sm text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
           >
-            ← Back
+            ← Zurück
           </button>
           <button
             type="submit"
             disabled={!stripe || paying}
             className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors"
           >
-            {paying ? 'Processing…' : `Pay CHF ${state.service?.price.toFixed(2)}`}
+            {paying ? 'Wird verarbeitet…' : `CHF ${state.service?.price.toFixed(2)} bezahlen`}
           </button>
         </div>
       </form>

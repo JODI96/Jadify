@@ -68,11 +68,11 @@ const initial: BookingState = {
 }
 
 const STEP_LABELS: Record<BookingStep, string> = {
-  service: 'Service',
-  slot: 'Date & Time',
-  customer: 'Your Details',
-  payment: 'Payment',
-  confirmation: 'Confirmed',
+  service: 'Leistung',
+  slot: 'Datum & Zeit',
+  customer: 'Angaben',
+  payment: 'Zahlung',
+  confirmation: 'Bestätigt',
 }
 
 export function BookingPage() {
@@ -88,7 +88,7 @@ export function BookingPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading…</div>
+        <div className="text-gray-500">Wird geladen…</div>
       </div>
     )
   }
@@ -97,7 +97,7 @@ export function BookingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600 text-lg">Business not found.</p>
+          <p className="text-gray-600 text-lg">Unternehmen nicht gefunden.</p>
         </div>
       </div>
     )

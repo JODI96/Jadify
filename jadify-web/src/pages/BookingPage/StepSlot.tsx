@@ -42,7 +42,7 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Pick a Date & Time</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-1">Datum & Zeit wählen</h2>
       <p className="text-sm text-gray-500 mb-4">
         {service.name} · {service.durationMinutes} min · CHF {service.price.toFixed(2)}
       </p>
@@ -50,14 +50,14 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
       {/* Staff selector */}
       {business.staff.length > 1 && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Staff member</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Mitarbeiter</label>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedStaff(null)}
               className={`px-3 py-1.5 rounded-lg border text-sm transition-colors
                 ${!selectedStaff ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
             >
-              Any
+              Beliebig
             </button>
             {business.staff.map(s => (
               <button
@@ -75,7 +75,7 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
 
       {/* Date picker */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Datum</label>
         <input
           type="date"
           min={today}
@@ -90,10 +90,10 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
 
       {/* Time slots */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Available times</label>
-        {isLoading && <p className="text-sm text-gray-400">Loading slots…</p>}
+        <label className="block text-sm font-medium text-gray-700 mb-2">Verfügbare Zeiten</label>
+        {isLoading && <p className="text-sm text-gray-400">Wird geladen…</p>}
         {!isLoading && slots?.length === 0 && (
-          <p className="text-sm text-gray-500">No availability for this date. Try another day.</p>
+          <p className="text-sm text-gray-500">Kein freier Termin an diesem Tag. Bitte anderen Tag wählen.</p>
         )}
         {!isLoading && slots && slots.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -115,7 +115,7 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
       </div>
 
       <button onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
-        ← Back
+        ← Zurück
       </button>
     </div>
   )
