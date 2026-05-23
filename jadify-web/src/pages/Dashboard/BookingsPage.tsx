@@ -3,7 +3,27 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { bookingApi, type BookingResponse } from '../../api'
 import { useAuth } from '../../store/authStore'
 
-const STATUSES = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled']
+const STATUSES = [
+  { value: 'All',       label: 'Alle' },
+  { value: 'Pending',   label: 'Ausstehend' },
+  { value: 'Confirmed', label: 'Bestätigt' },
+  { value: 'Completed', label: 'Abgeschlossen' },
+  { value: 'Cancelled', label: 'Storniert' },
+]
+
+const STATUS_LABELS: Record<string, string> = {
+  Confirmed: 'Bestätigt',
+  Pending:   'Ausstehend',
+  Cancelled: 'Storniert',
+  Completed: 'Abgeschlossen',
+}
+
+const STATUS_CLASSES: Record<string, string> = {
+  Confirmed: 'bg-green-100 text-green-700',
+  Pending:   'bg-yellow-100 text-yellow-700',
+  Cancelled: 'bg-red-100 text-red-700',
+  Completed: 'bg-gray-100 text-gray-600',
+}
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('de-CH', {
@@ -11,16 +31,10 @@ function formatDateTime(iso: string) {
   })
 }
 
-function statusBadge(status: string) {
-  const classes: Record<string, string> = {
-    Confirmed: 'bg-green-100 text-green-700',
-    Pending:   'bg-yellow-100 text-yellow-700',
-    Cancelled: 'bg-red-100 text-red-700',
-    Completed: 'bg-gray-100 text-gray-600',
-  }
+function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${classes[status] ?? 'bg-gray-100 text-gray-600'}`}>
-      {status}
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_CLASSES[status] ?? 'bg-gray-100 text-gray-600'}`}>
+      {STATUS_LABELS[status] ?? status}
     </span>
   )
 }
@@ -55,30 +69,32 @@ export function BookingsPage() {
   )
 
   return (
-    <div className="px-8 py-8 max-w-5xl">
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">Bookings</h1>
+    <div className="px-4 py-4 md:px-8 md:py-8 max-w-5xl">
+      <h1 className="text-xl font-semibold text-gray-900 mb-6">Buchungen</h1>
 
       {/* Filter tabs */}
       <div className="flex gap-1 mb-5 flex-wrap">
-        {STATUSES.map(s => (
+        {STATUSES.map(({ value, label }) => (
           <button
-            key={s}
-            onClick={() => setFilter(s)}
+            key={value}
+            onClick={() => setFilter(value)}
             className={`px-3 py-1.5 rounded-lg text-sm transition-colors
-              ${filter === s ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'}`}
+              ${filter === value
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'}`}
           >
-            {s}
+            {label}
           </button>
         ))}
       </div>
 
       {isLoading && (
-        <div className="text-center text-gray-400 py-12">Loading…</div>
+        <div className="text-center text-gray-400 py-12">Wird geladen…</div>
       )}
 
       {!isLoading && sorted.length === 0 && (
         <div className="text-center text-gray-400 py-12 bg-white border border-gray-200 rounded-xl">
-          No bookings found
+          Keine Buchungen gefunden
         </div>
       )}
 
@@ -88,13 +104,13 @@ export function BookingsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
-                  <th className="px-5 py-3 text-left font-medium">Date</th>
-                  <th className="px-5 py-3 text-left font-medium">Customer</th>
-                  <th className="px-5 py-3 text-left font-medium">Service</th>
-                  <th className="px-5 py-3 text-left font-medium">Staff</th>
-                  <th className="px-5 py-3 text-right font-medium">Amount</th>
+                  <th className="px-5 py-3 text-left font-medium">Datum</th>
+                  <th className="px-5 py-3 text-left font-medium">Kunde</th>
+                  <th className="px-5 py-3 text-left font-medium">Leistung</th>
+                  <th className="px-5 py-3 text-left font-medium">Mitarbeiter</th>
+                  <th className="px-5 py-3 text-right font-medium">Betrag</th>
                   <th className="px-5 py-3 text-left font-medium">Status</th>
-                  <th className="px-5 py-3 text-left font-medium">Actions</th>
+                  <th className="px-5 py-3 text-left font-medium">Aktionen</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -112,7 +128,7 @@ export function BookingsPage() {
                     <td className="px-5 py-3 text-right font-medium text-gray-900">
                       CHF {b.totalAmount.toFixed(2)}
                     </td>
-                    <td className="px-5 py-3">{statusBadge(b.status)}</td>
+                    <td className="px-5 py-3"><StatusBadge status={b.status} /></td>
                     <td className="px-5 py-3">
                       <div className="flex gap-2">
                         {b.status === 'Pending' && (
@@ -121,7 +137,7 @@ export function BookingsPage() {
                             disabled={confirm.isPending}
                             className="text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                           >
-                            Confirm
+                            Bestätigen
                           </button>
                         )}
                         {(b.status === 'Pending' || b.status === 'Confirmed') && (
@@ -130,7 +146,7 @@ export function BookingsPage() {
                             disabled={cancel.isPending}
                             className="text-xs px-2.5 py-1 border border-gray-200 text-gray-600 rounded-lg hover:border-red-300 hover:text-red-600 disabled:opacity-50 transition-colors"
                           >
-                            Cancel
+                            Stornieren
                           </button>
                         )}
                       </div>
