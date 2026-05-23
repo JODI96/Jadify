@@ -218,15 +218,21 @@ function InlineServiceForm({ form, setForm, onSave, onCancel, saving }: {
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         className={inputCls}
       />
-      <div className="flex gap-2">
-        <input type="number" placeholder="Dauer (Min)" value={form.durationMinutes}
-          onChange={e => setForm(f => ({ ...f, durationMinutes: +e.target.value }))}
-          className={`${inputCls} w-28`}
-        />
-        <input type="number" step="0.01" placeholder="Preis (CHF)" value={form.price}
-          onChange={e => setForm(f => ({ ...f, price: +e.target.value }))}
-          className={`${inputCls} w-28`}
-        />
+      <div className="flex gap-2 items-end">
+        <div>
+          <p className="text-xs text-gray-400 mb-1">Dauer (Min)</p>
+          <input type="number" value={form.durationMinutes}
+            onChange={e => setForm(f => ({ ...f, durationMinutes: +e.target.value }))}
+            className={`${inputCls} w-28`}
+          />
+        </div>
+        <div>
+          <p className="text-xs text-gray-400 mb-1">Preis (CHF)</p>
+          <input type="number" step="0.01" value={form.price}
+            onChange={e => setForm(f => ({ ...f, price: +e.target.value }))}
+            className={`${inputCls} w-28`}
+          />
+        </div>
         <SaveCancelButtons onSave={onSave} onCancel={onCancel} saving={saving} />
       </div>
     </div>
