@@ -209,23 +209,23 @@ function InlineServiceForm({ form, setForm, onSave, onCancel, saving }: {
   return (
     <div className="py-2 space-y-2">
       <input
-        placeholder="Name" value={form.name}
+        placeholder="Name (z.B. Haarschnitt)" value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
         className={inputCls}
       />
       <input
-        placeholder="Beschreibung (optional)" value={form.description}
+        placeholder="Beschreibung (z.B. Waschen & Schneiden)" value={form.description}
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         className={inputCls}
       />
       <div className="flex gap-2">
-        <input type="number" placeholder="Min" value={form.durationMinutes}
+        <input type="number" placeholder="Dauer (Min)" value={form.durationMinutes}
           onChange={e => setForm(f => ({ ...f, durationMinutes: +e.target.value }))}
-          className={`${inputCls} w-20`}
+          className={`${inputCls} w-28`}
         />
-        <input type="number" step="0.01" placeholder="CHF" value={form.price}
+        <input type="number" step="0.01" placeholder="Preis (CHF)" value={form.price}
           onChange={e => setForm(f => ({ ...f, price: +e.target.value }))}
-          className={`${inputCls} w-24`}
+          className={`${inputCls} w-28`}
         />
         <SaveCancelButtons onSave={onSave} onCancel={onCancel} saving={saving} />
       </div>
