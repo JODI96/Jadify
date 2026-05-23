@@ -1,0 +1,54 @@
+# ── .NET / ASP.NET Core ───────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Secrets – never commit these
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.p12
+
+# ── Node / Vite ───────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── IDE ───────────────────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.ntvs*
+*.njsproj
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ── Claude Code local settings ────────────────────────────────
+.claude/
+
+# ── Misc ──────────────────────────────────────────────────────
+*.bak
+*.tmp

@@ -1,0 +1,6 @@
+@Jadify.API_HostAddress = http://localhost:5147
+
+GET {{Jadify.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

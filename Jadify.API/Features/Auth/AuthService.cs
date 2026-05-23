@@ -1,0 +1,156 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Jadify.API.Shared.Data;
+using Jadify.API.Shared.Enums;
+using Jadify.API.Shared.Helpers;
+using Jadify.API.Shared.Interfaces;
+using Jadify.API.Shared.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Jadify.API.Features.Auth;
+
+public class AuthService(
+    UserManager<IdentityUser> userManager,
+    JadifyDbContext db,
+    IConfiguration config,
+    IEmailService emailService,
+    ILogger<AuthService> logger) : IAuthService
+{
+    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
+    {
+        var user = new IdentityUser { UserName = request.Email, Email = request.Email };
+        var createResult = await userManager.CreateAsync(user, request.Password);
+
+        if (!createResult.Succeeded)
+        {
+            var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Registration failed: {errors}");
+        }
+
+        try
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+            var baseSlug = SlugHelper.Generate(request.BusinessName);
+            var slug = await db.Businesses.AnyAsync(b => b.Slug == baseSlug, ct)
+                ? SlugHelper.MakeUnique(baseSlug)
+                : baseSlug;
+
+            var business = new Business
+            {
+                OwnerId      = user.Id,
+                Name         = request.BusinessName,
+                Type         = request.BusinessType,
+                Slug         = slug,
+                Address      = request.Address,
+                Phone        = request.Phone,
+                Email        = request.Email
+            };
+            db.Businesses.Add(business);
+
+            db.Subscriptions.Add(new Subscription
+            {
+                BusinessId = business.Id,
+                Tier       = SubscriptionTier.Free
+            });
+
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
+            // Welcome email is best-effort — a failure must not roll back registration
+            _ = emailService.SendWelcomeAsync(request.Email, request.OwnerName)
+                .ContinueWith(t => logger.LogWarning(t.Exception, "Welcome email failed for {Email}", request.Email),
+                    TaskContinuationOptions.OnlyOnFaulted);
+
+            return await IssueTokensAsync(user, business.Id, ct);
+        }
+        catch
+        {
+            // Identity user was created above; clean it up if the business creation fails
+            await userManager.DeleteAsync(user);
+            throw;
+        }
+    }
+
+    public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
+            throw new UnauthorizedAccessException("Invalid email or password");
+
+        var business = await db.Businesses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.OwnerId == user.Id, ct)
+            ?? throw new InvalidOperationException("No business found for this account");
+
+        return await IssueTokensAsync(user, business.Id, ct);
+    }
+
+    public async Task<AuthResponse> RefreshAsync(string refreshToken, CancellationToken ct = default)
+    {
+        // Refresh token format: "{userId}|{base64RandomBytes}"
+        var separator = refreshToken.IndexOf('|');
+        if (separator < 0)
+            throw new UnauthorizedAccessException("Invalid refresh token");
+
+        var userId    = refreshToken[..separator];
+        var tokenPart = refreshToken[(separator + 1)..];
+
+        var user = await userManager.FindByIdAsync(userId)
+            ?? throw new UnauthorizedAccessException("Invalid refresh token");
+
+        var stored = await userManager.GetAuthenticationTokenAsync(user, "Jadify", "RefreshToken");
+        if (stored != tokenPart)
+            throw new UnauthorizedAccessException("Invalid refresh token");
+
+        var business = await db.Businesses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.OwnerId == user.Id, ct)
+            ?? throw new InvalidOperationException("No business found for this account");
+
+        return await IssueTokensAsync(user, business.Id, ct);
+    }
+
+    // -------------------------------------------------------------------------
+
+    private async Task<AuthResponse> IssueTokensAsync(IdentityUser user, Guid businessId, CancellationToken ct)
+    {
+        var expiryMinutes = int.TryParse(config["Jwt:ExpiryMinutes"], out var m) ? m : 60;
+        var expiresAt     = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        var accessToken   = GenerateJwt(user, businessId, expiresAt);
+
+        // Rotate refresh token on every issuance
+        var randomPart   = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+        var refreshToken = $"{user.Id}|{randomPart}";
+        await userManager.SetAuthenticationTokenAsync(user, "Jadify", "RefreshToken", randomPart);
+
+        return new AuthResponse(accessToken, refreshToken, expiresAt, businessId, user.Email!);
+    }
+
+    private string GenerateJwt(IdentityUser user, Guid businessId, DateTime expiresAt)
+    {
+        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        Claim[] claims =
+        [
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Email,          user.Email!),
+            new("business_id",             businessId.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+        ];
+
+        var token = new JwtSecurityToken(
+            issuer:            config["Jwt:Issuer"],
+            audience:          config["Jwt:Audience"],
+            claims:            claims,
+            expires:           expiresAt,
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
