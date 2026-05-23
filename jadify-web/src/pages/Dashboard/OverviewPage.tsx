@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../store/authStore'
 import {
@@ -11,6 +12,8 @@ import {
   type TableResponse,
   type UpcomingBookingItem,
 } from '../../api'
+
+const PREVIEW_LIMIT = 5
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -111,10 +114,11 @@ export function OverviewPage() {
   )
 }
 
-// ── Services ──────────────────────────────────────────────────────────────────
+// ── Services Panel ────────────────────────────────────────────────────────────
 
 function ServicesPanel({ businessId }: { businessId: string }) {
   const qc = useQueryClient()
+  const [search, setSearch] = useState('')
   const [form, setForm] = useState({ name: '', description: '', durationMinutes: 30, price: 0 })
   const [editId, setEditId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -155,12 +159,28 @@ function ServicesPanel({ businessId }: { businessId: string }) {
     setOpen(false)
   }
 
-  const activeServices = services.filter(s => s.isActive)
+  const filtered = services.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  )
+  const preview = filtered.slice(0, PREVIEW_LIMIT)
+  const hasMore = filtered.length > PREVIEW_LIMIT
 
   return (
-    <PanelCard title="Dienstleistungen" count={activeServices.length}>
-      <div className="divide-y divide-gray-50">
-        {services.map(s => (
+    <PanelCard
+      title="Dienstleistungen"
+      count={services.filter(s => s.isActive).length}
+      allLink="/dashboard/dienstleistungen"
+      allCount={services.length}
+    >
+      <input
+        placeholder="Suchen…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        className={`${inputCls} mb-2`}
+      />
+
+      <div className="divide-y divide-gray-50 max-h-52 overflow-y-auto">
+        {preview.map(s => (
           <div key={s.id}>
             {editId === s.id ? (
               <InlineServiceForm
@@ -170,9 +190,9 @@ function ServicesPanel({ businessId }: { businessId: string }) {
                 saving={updateMut.isPending}
               />
             ) : (
-              <div className="flex items-center justify-between py-2.5 px-1">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{s.name}</p>
+              <div className="flex items-center justify-between py-2 px-1">
+                <div className="min-w-0 mr-2">
+                  <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
                   <p className="text-xs text-gray-400">{s.durationMinutes} Min · CHF {s.price.toFixed(2)}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -183,7 +203,16 @@ function ServicesPanel({ businessId }: { businessId: string }) {
             )}
           </div>
         ))}
+        {filtered.length === 0 && !open && (
+          <p className="py-3 text-xs text-center text-gray-400">Keine Einträge</p>
+        )}
       </div>
+
+      {hasMore && (
+        <Link to="/dashboard/dienstleistungen" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+          + {filtered.length - PREVIEW_LIMIT} weitere →
+        </Link>
+      )}
 
       {open ? (
         <InlineServiceForm
@@ -239,10 +268,11 @@ function InlineServiceForm({ form, setForm, onSave, onCancel, saving }: {
   )
 }
 
-// ── Staff ─────────────────────────────────────────────────────────────────────
+// ── Staff Panel ───────────────────────────────────────────────────────────────
 
 function StaffPanel({ businessId }: { businessId: string }) {
   const qc = useQueryClient()
+  const [search, setSearch] = useState('')
   const [form, setForm] = useState({ name: '', email: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -276,10 +306,29 @@ function StaffPanel({ businessId }: { businessId: string }) {
     setOpen(false)
   }
 
+  const filtered = staff.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
+  )
+  const preview = filtered.slice(0, PREVIEW_LIMIT)
+  const hasMore = filtered.length > PREVIEW_LIMIT
+
   return (
-    <PanelCard title="Mitarbeiter" count={staff.filter(s => s.isActive).length}>
-      <div className="divide-y divide-gray-50">
-        {staff.map(s => (
+    <PanelCard
+      title="Mitarbeiter"
+      count={staff.filter(s => s.isActive).length}
+      allLink="/dashboard/mitarbeiter"
+      allCount={staff.length}
+    >
+      <input
+        placeholder="Suchen…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        className={`${inputCls} mb-2`}
+      />
+
+      <div className="divide-y divide-gray-50 max-h-52 overflow-y-auto">
+        {preview.map(s => (
           <div key={s.id}>
             {editId === s.id ? (
               <div className="py-2 space-y-2">
@@ -292,10 +341,10 @@ function StaffPanel({ businessId }: { businessId: string }) {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between py-2.5 px-1">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{s.name}</p>
-                  <p className="text-xs text-gray-400">{s.email}</p>
+              <div className="flex items-center justify-between py-2 px-1">
+                <div className="min-w-0 mr-2">
+                  <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{s.email}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button onClick={() => startEdit(s)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
@@ -305,11 +354,20 @@ function StaffPanel({ businessId }: { businessId: string }) {
             )}
           </div>
         ))}
+        {filtered.length === 0 && !open && (
+          <p className="py-3 text-xs text-center text-gray-400">Keine Einträge</p>
+        )}
       </div>
+
+      {hasMore && (
+        <Link to="/dashboard/mitarbeiter" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+          + {filtered.length - PREVIEW_LIMIT} weitere →
+        </Link>
+      )}
 
       {open ? (
         <div className="py-2 space-y-2">
-          <input placeholder="Name" value={form.name}
+          <input placeholder="Name (z.B. Anna Müller)" value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} />
           <div className="flex gap-2">
             <input type="email" placeholder="E-Mail" value={form.email}
@@ -326,10 +384,11 @@ function StaffPanel({ businessId }: { businessId: string }) {
   )
 }
 
-// ── Tables ────────────────────────────────────────────────────────────────────
+// ── Tables Panel ──────────────────────────────────────────────────────────────
 
 function TablesPanel({ businessId }: { businessId: string }) {
   const qc = useQueryClient()
+  const [search, setSearch] = useState('')
   const [form, setForm] = useState({ name: '', capacity: 2 })
   const [editId, setEditId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -363,24 +422,44 @@ function TablesPanel({ businessId }: { businessId: string }) {
     setOpen(false)
   }
 
+  const filtered = tables.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase())
+  )
+  const preview = filtered.slice(0, PREVIEW_LIMIT)
+  const hasMore = filtered.length > PREVIEW_LIMIT
+
   return (
-    <PanelCard title="Tische" count={tables.filter(t => t.isActive).length}>
-      <div className="divide-y divide-gray-50">
-        {tables.map(t => (
+    <PanelCard
+      title="Tische"
+      count={tables.filter(t => t.isActive).length}
+      allLink="/dashboard/tische"
+      allCount={tables.length}
+    >
+      <input
+        placeholder="Suchen…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        className={`${inputCls} mb-2`}
+      />
+
+      <div className="divide-y divide-gray-50 max-h-52 overflow-y-auto">
+        {preview.map(t => (
           <div key={t.id}>
             {editId === t.id ? (
               <div className="py-2 space-y-2">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-end">
                   <input placeholder="Name" value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={`${inputCls} flex-1`} />
-                  <input type="number" min={1} value={form.capacity}
-                    onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))}
-                    className={`${inputCls} w-16`} />
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">Personen</p>
+                    <input type="number" min={1} value={form.capacity}
+                      onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={`${inputCls} w-20`} />
+                  </div>
                   <SaveCancelButtons onSave={() => updateMut.mutate(t)} onCancel={() => setEditId(null)} saving={updateMut.isPending} />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between py-2.5 px-1">
+              <div className="flex items-center justify-between py-2 px-1">
                 <div>
                   <p className="text-sm font-medium text-gray-800">{t.name}</p>
                   <p className="text-xs text-gray-400">{t.capacity} Personen</p>
@@ -393,15 +472,27 @@ function TablesPanel({ businessId }: { businessId: string }) {
             )}
           </div>
         ))}
+        {filtered.length === 0 && !open && (
+          <p className="py-3 text-xs text-center text-gray-400">Keine Einträge</p>
+        )}
       </div>
 
+      {hasMore && (
+        <Link to="/dashboard/tische" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+          + {filtered.length - PREVIEW_LIMIT} weitere →
+        </Link>
+      )}
+
       {open ? (
-        <div className="py-2">
-          <div className="flex gap-2">
-            <input placeholder="Name" value={form.name}
+        <div className="py-2 space-y-2">
+          <div className="flex gap-2 items-end">
+            <input placeholder="Name (z.B. Tisch 1)" value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={`${inputCls} flex-1`} />
-            <input type="number" min={1} value={form.capacity}
-              onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={`${inputCls} w-16`} />
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Personen</p>
+              <input type="number" min={1} value={form.capacity}
+                onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={`${inputCls} w-20`} />
+            </div>
             <SaveCancelButtons onSave={() => createMut.mutate()} onCancel={() => setOpen(false)} saving={createMut.isPending} />
           </div>
         </div>
@@ -421,10 +512,7 @@ const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 function HoursPanel({ businessId }: { businessId: string }) {
   const [hours, setHours] = useState(
     Array.from({ length: 7 }, (_, i) => ({
-      dayOfWeek: i,
-      openTime: '09:00',
-      closeTime: '17:00',
-      isClosed: i === 0,
+      dayOfWeek: i, openTime: '09:00', closeTime: '17:00', isClosed: i === 0,
     }))
   )
   const [saved, setSaved] = useState(false)
@@ -458,7 +546,7 @@ function HoursPanel({ businessId }: { businessId: string }) {
                 className="accent-indigo-600" />
               <span className="text-xs text-gray-400">Zu</span>
             </label>
-            {!h.isClosed && (
+            {!h.isClosed ? (
               <>
                 <input type="time" value={h.openTime}
                   onChange={e => setDay(i, { openTime: e.target.value })}
@@ -468,8 +556,9 @@ function HoursPanel({ businessId }: { businessId: string }) {
                   onChange={e => setDay(i, { closeTime: e.target.value })}
                   className="border border-gray-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
               </>
+            ) : (
+              <span className="text-xs text-gray-300">Geschlossen</span>
             )}
-            {h.isClosed && <span className="text-xs text-gray-300">Geschlossen</span>}
           </div>
         ))}
       </div>
@@ -484,21 +573,19 @@ function HoursPanel({ businessId }: { businessId: string }) {
   )
 }
 
-// ── Today's schedule ──────────────────────────────────────────────────────────
+// ── Schedule ──────────────────────────────────────────────────────────────────
 
 function SchedulePanel({ schedule, loading }: { schedule: UpcomingBookingItem[]; loading?: boolean }) {
   return (
     <PanelCard title="Heutiger Tagesplan">
       {loading ? (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-          ))}
+          {[...Array(3)].map((_, i) => <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />)}
         </div>
       ) : schedule.length === 0 ? (
         <p className="text-sm text-gray-400">Heute keine Buchungen</p>
       ) : (
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
           {schedule.map(item => (
             <div key={item.id} className="flex items-center gap-3 py-2.5">
               <span className="text-xs font-medium text-gray-500 whitespace-nowrap w-24 shrink-0">
@@ -517,20 +604,31 @@ function SchedulePanel({ schedule, loading }: { schedule: UpcomingBookingItem[];
   )
 }
 
-// ── Shared UI primitives ──────────────────────────────────────────────────────
+// ── Shared UI ─────────────────────────────────────────────────────────────────
 
-function PanelCard({ title, count, children }: {
-  title: string; count?: number; children: React.ReactNode
+function PanelCard({ title, count, allLink, allCount, children }: {
+  title: string
+  count?: number
+  allLink?: string
+  allCount?: number
+  children: React.ReactNode
 }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-gray-700">{title}</h2>
-        {count !== undefined && (
-          <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
-            {count}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {count !== undefined && (
+            <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+              {count}
+            </span>
+          )}
+          {allLink && (
+            <Link to={allLink} className="text-xs text-gray-400 hover:text-indigo-600 transition-colors">
+              Alle anzeigen ({allCount}) →
+            </Link>
+          )}
+        </div>
       </div>
       {children}
     </div>
@@ -542,16 +640,11 @@ function SaveCancelButtons({ onSave, onCancel, saving }: {
 }) {
   return (
     <div className="flex gap-1 shrink-0">
-      <button
-        onClick={onSave}
-        disabled={saving}
-        className="text-xs bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60"
-      >
+      <button onClick={onSave} disabled={saving}
+        className="text-xs bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60">
         {saving ? '…' : '✓'}
       </button>
-      <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 px-1.5">
-        ✕
-      </button>
+      <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 px-1.5">✕</button>
     </div>
   )
 }

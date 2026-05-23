@@ -7,7 +7,7 @@ export function DashboardLayout() {
   const navigate = useNavigate()
 
   const visibleModules = DASHBOARD_MODULES.filter(
-    m => !m.visibleFor || m.visibleFor.includes(businessType ?? ''),
+    m => m.showInNav !== false && (!m.visibleFor || m.visibleFor.includes(businessType ?? '')),
   )
 
   function handleLogout() {
