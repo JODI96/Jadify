@@ -42,7 +42,7 @@ export function RegisterPage() {
         address: form.address,
         phone: form.phone,
       })
-      login(res.accessToken, res.refreshToken, res.businessId, res.email)
+      login(res.accessToken, res.refreshToken, res.businessId, res.email, res.businessType)
       navigate('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registrierung fehlgeschlagen')

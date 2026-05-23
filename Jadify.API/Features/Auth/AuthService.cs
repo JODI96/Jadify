@@ -66,7 +66,7 @@ public class AuthService(
                 .ContinueWith(t => logger.LogWarning(t.Exception, "Welcome email failed for {Email}", request.Email),
                     TaskContinuationOptions.OnlyOnFaulted);
 
-            return await IssueTokensAsync(user, business.Id, ct);
+            return await IssueTokensAsync(user, business.Id, business.Type, ct);
         }
         catch
         {
@@ -87,7 +87,7 @@ public class AuthService(
             .FirstOrDefaultAsync(b => b.OwnerId == user.Id, ct)
             ?? throw new InvalidOperationException("No business found for this account");
 
-        return await IssueTokensAsync(user, business.Id, ct);
+        return await IssueTokensAsync(user, business.Id, business.Type, ct);
     }
 
     public async Task<AuthResponse> RefreshAsync(string refreshToken, CancellationToken ct = default)
@@ -112,12 +112,12 @@ public class AuthService(
             .FirstOrDefaultAsync(b => b.OwnerId == user.Id, ct)
             ?? throw new InvalidOperationException("No business found for this account");
 
-        return await IssueTokensAsync(user, business.Id, ct);
+        return await IssueTokensAsync(user, business.Id, business.Type, ct);
     }
 
     // -------------------------------------------------------------------------
 
-    private async Task<AuthResponse> IssueTokensAsync(IdentityUser user, Guid businessId, CancellationToken ct)
+    private async Task<AuthResponse> IssueTokensAsync(IdentityUser user, Guid businessId, BusinessType businessType, CancellationToken ct)
     {
         var expiryMinutes = int.TryParse(config["Jwt:ExpiryMinutes"], out var m) ? m : 60;
         var expiresAt     = DateTime.UtcNow.AddMinutes(expiryMinutes);
@@ -128,7 +128,7 @@ public class AuthService(
         var refreshToken = $"{user.Id}|{randomPart}";
         await userManager.SetAuthenticationTokenAsync(user, "Jadify", "RefreshToken", randomPart);
 
-        return new AuthResponse(accessToken, refreshToken, expiresAt, businessId, user.Email!);
+        return new AuthResponse(accessToken, refreshToken, expiresAt, businessId, user.Email!, businessType.ToString());
     }
 
     private string GenerateJwt(IdentityUser user, Guid businessId, DateTime expiresAt)

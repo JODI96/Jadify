@@ -25,5 +25,6 @@ public class Business
     public ICollection<Staff> Staff { get; set; } = new List<Staff>();
     public ICollection<Service> Services { get; set; } = new List<Service>();
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<Table> Tables { get; set; } = new List<Table>();
     public Subscription? Subscription { get; set; }
 }

@@ -5,8 +5,13 @@ import type {
   BusinessPublicResponse,
   CreateBookingRequest,
   DashboardResponse,
+  ServiceOwnerResponse,
+  SetBusinessHoursRequest,
+  StaffOwnerResponse,
   SubscriptionResponse,
+  TableResponse,
   TimeSlot,
+  UpdateBusinessRequest,
 } from './types'
 
 export * from './types'
@@ -14,6 +19,10 @@ export * from './types'
 export const businessApi = {
   getBySlug: (slug: string) =>
     api.get<BusinessPublicResponse>(`/businesses/${slug}`),
+  update: (id: string, req: UpdateBusinessRequest) =>
+    api.put<BusinessPublicResponse>(`/businesses/${id}`, req),
+  setHours: (id: string, req: SetBusinessHoursRequest) =>
+    api.post<unknown>(`/businesses/${id}/hours`, req),
 }
 
 export const availabilityApi = {
@@ -69,4 +78,37 @@ export const subscriptionApi = {
   changeTier: (newTier: string) =>
     api.put<SubscriptionResponse>('/subscriptions/upgrade', { newTier }),
   cancel: () => api.delete<void>('/subscriptions/cancel'),
+}
+
+export const serviceOwnerApi = {
+  list: (businessId: string) =>
+    api.get<ServiceOwnerResponse[]>(`/businesses/${businessId}/services`),
+  create: (businessId: string, req: { name: string; description?: string; durationMinutes: number; price: number }) =>
+    api.post<ServiceOwnerResponse>(`/businesses/${businessId}/services`, req),
+  update: (id: string, req: { name: string; description?: string; durationMinutes: number; price: number; isActive: boolean }) =>
+    api.put<ServiceOwnerResponse>(`/services/${id}`, req),
+  remove: (id: string) =>
+    api.delete<void>(`/services/${id}`),
+}
+
+export const staffOwnerApi = {
+  list: (businessId: string) =>
+    api.get<StaffOwnerResponse[]>(`/businesses/${businessId}/staff`),
+  create: (businessId: string, req: { name: string; email: string }) =>
+    api.post<StaffOwnerResponse>(`/businesses/${businessId}/staff`, req),
+  update: (id: string, req: { name: string; email: string; isActive: boolean }) =>
+    api.put<StaffOwnerResponse>(`/staff/${id}`, req),
+  remove: (id: string) =>
+    api.delete<void>(`/staff/${id}`),
+}
+
+export const tableApi = {
+  list: (businessId: string) =>
+    api.get<TableResponse[]>(`/businesses/${businessId}/tables`),
+  create: (businessId: string, req: { name: string; capacity: number }) =>
+    api.post<TableResponse>(`/businesses/${businessId}/tables`, req),
+  update: (id: string, req: { name: string; capacity: number; isActive: boolean }) =>
+    api.put<TableResponse>(`/tables/${id}`, req),
+  remove: (id: string) =>
+    api.delete<void>(`/tables/${id}`),
 }

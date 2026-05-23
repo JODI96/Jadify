@@ -3,6 +3,7 @@ using System;
 using Jadify.API.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Jadify.API.Shared.Data.Migrations
 {
     [DbContext(typeof(JadifyDbContext))]
-    partial class JadifyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260523172052_AddTables")]
+    partial class AddTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -344,35 +347,6 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.ToTable("Subscriptions");
                 });
 
-            modelBuilder.Entity("Jadify.API.Shared.Models.Table", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BusinessId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId");
-
-                    b.ToTable("Tables");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -689,17 +663,6 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("Jadify.API.Shared.Models.Table", b =>
-                {
-                    b.HasOne("Jadify.API.Shared.Models.Business", "Business")
-                        .WithMany("Tables")
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -767,8 +730,6 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.Navigation("Staff");
 
                     b.Navigation("Subscription");
-
-                    b.Navigation("Tables");
                 });
 
             modelBuilder.Entity("Jadify.API.Shared.Models.Customer", b =>

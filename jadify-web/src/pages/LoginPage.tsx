@@ -17,7 +17,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       const res = await authApi.login(email, password)
-      login(res.accessToken, res.refreshToken, res.businessId, res.email)
+      login(res.accessToken, res.refreshToken, res.businessId, res.email, res.businessType)
       navigate('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen')

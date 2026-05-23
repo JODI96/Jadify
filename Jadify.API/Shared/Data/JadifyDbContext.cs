@@ -17,6 +17,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
     public DbSet<Customer>      Customers     => Set<Customer>();
     public DbSet<Subscription>  Subscriptions => Set<Subscription>();
     public DbSet<Payment>       Payments      => Set<Payment>();
+    public DbSet<Table>         Tables        => Set<Table>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -31,6 +32,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
         ConfigureCustomer(builder);
         ConfigureSubscription(builder);
         ConfigurePayment(builder);
+        ConfigureTable(builder);
     }
 
     private static void ConfigureBusiness(ModelBuilder builder)
@@ -177,6 +179,19 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
 
             e.Property(p => p.Amount).HasPrecision(18, 2);
             e.Property(p => p.FeeAmount).HasPrecision(18, 2);
+        });
+    }
+
+    private static void ConfigureTable(ModelBuilder builder)
+    {
+        builder.Entity<Table>(e =>
+        {
+            e.HasOne(t => t.Business)
+             .WithMany(b => b.Tables)
+             .HasForeignKey(t => t.BusinessId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(t => t.BusinessId);
         });
     }
 }

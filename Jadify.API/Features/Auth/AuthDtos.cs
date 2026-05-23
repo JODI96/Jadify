@@ -26,5 +26,6 @@ public record AuthResponse(
     string RefreshToken,
     DateTime ExpiresAt,
     Guid BusinessId,
-    string Email
+    string Email,
+    string BusinessType
 );

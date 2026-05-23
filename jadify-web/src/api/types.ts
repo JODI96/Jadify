@@ -72,6 +72,7 @@ export interface AuthResponse {
   expiresAt: string
   businessId: string
   email: string
+  businessType: string
 }
 
 export interface DashboardResponse {
@@ -104,4 +105,50 @@ export interface SubscriptionResponse {
   cancelAtPeriodEnd: boolean
   stripeSubscriptionId?: string
   createdAt: string
+}
+
+// ── Owner CRUD types ──────────────────────────────────────────────────────────
+
+export interface ServiceOwnerResponse {
+  id: string
+  name: string
+  description?: string
+  durationMinutes: number
+  price: number
+  isActive: boolean
+  createdAt: string
+}
+
+export interface StaffOwnerResponse {
+  id: string
+  name: string
+  email: string
+  avatarUrl?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface TableResponse {
+  id: string
+  name: string
+  capacity: number
+  isActive: boolean
+  createdAt: string
+}
+
+export interface UpdateBusinessRequest {
+  name: string
+  type: string
+  address: string
+  phone: string
+  email: string
+}
+
+export interface SetBusinessHoursRequest {
+  hours: {
+    dayOfWeek: number
+    openTime: string
+    closeTime: string
+    isClosed: boolean
+  }[]
 }

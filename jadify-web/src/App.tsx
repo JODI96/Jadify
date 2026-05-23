@@ -7,9 +7,7 @@ import { BookingPage } from './pages/BookingPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { DashboardLayout } from './pages/Dashboard/DashboardLayout'
-import { OverviewPage } from './pages/Dashboard/OverviewPage'
-import { BookingsPage } from './pages/Dashboard/BookingsPage'
-import { SubscriptionPage } from './pages/Dashboard/SubscriptionPage'
+import { DASHBOARD_MODULES } from './dashboard/registry'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -37,9 +35,9 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<OverviewPage />} />
-              <Route path="bookings" element={<BookingsPage />} />
-              <Route path="subscription" element={<SubscriptionPage />} />
+              {DASHBOARD_MODULES.map(m => (
+                <Route key={m.id} path={m.path} element={m.element} />
+              ))}
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

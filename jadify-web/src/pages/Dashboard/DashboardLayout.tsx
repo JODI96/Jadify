@@ -1,15 +1,14 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/authStore'
-
-const NAV = [
-  { to: '/dashboard/overview', label: 'Übersicht', icon: '▦' },
-  { to: '/dashboard/bookings', label: 'Buchungen', icon: '📅' },
-  { to: '/dashboard/subscription', label: 'Abonnement', icon: '⭐' },
-]
+import { DASHBOARD_MODULES } from '../../dashboard/registry'
 
 export function DashboardLayout() {
-  const { email, logout } = useAuth()
+  const { email, businessType, logout } = useAuth()
   const navigate = useNavigate()
+
+  const visibleModules = DASHBOARD_MODULES.filter(
+    m => !m.visibleFor || m.visibleFor.includes(businessType ?? ''),
+  )
 
   function handleLogout() {
     logout()
@@ -18,17 +17,16 @@ export function DashboardLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
       <aside className="w-56 shrink-0 bg-white border-r border-gray-200 flex flex-col">
         <div className="px-5 py-5 border-b border-gray-100">
           <span className="text-lg font-bold text-indigo-600 tracking-tight">Jadify</span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map(({ to, label, icon }) => (
+          {visibleModules.map(({ path, label, icon }) => (
             <NavLink
-              key={to}
-              to={to}
+              key={path}
+              to={`/dashboard/${path}`}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors
                 ${isActive
@@ -53,7 +51,6 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Content */}
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>

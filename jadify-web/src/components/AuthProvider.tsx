@@ -4,12 +4,19 @@ import { AuthContext, loadAuthState, type AuthState } from '../store/authStore'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(loadAuthState)
 
-  function login(token: string, refreshToken: string, businessId: string, email: string) {
+  function login(
+    token: string,
+    refreshToken: string,
+    businessId: string,
+    email: string,
+    businessType: string,
+  ) {
     localStorage.setItem('jadify_token', token)
     localStorage.setItem('jadify_refresh', refreshToken)
     localStorage.setItem('jadify_business_id', businessId)
     localStorage.setItem('jadify_email', email)
-    setState({ token, refreshToken, businessId, email })
+    localStorage.setItem('jadify_business_type', businessType)
+    setState({ token, refreshToken, businessId, email, businessType })
   }
 
   function logout() {
@@ -17,7 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('jadify_refresh')
     localStorage.removeItem('jadify_business_id')
     localStorage.removeItem('jadify_email')
-    setState({ token: null, refreshToken: null, businessId: null, email: null })
+    localStorage.removeItem('jadify_business_type')
+    setState({ token: null, refreshToken: null, businessId: null, email: null, businessType: null })
   }
 
   return (
