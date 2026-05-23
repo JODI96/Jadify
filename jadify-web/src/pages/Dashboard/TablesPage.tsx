@@ -55,7 +55,7 @@ export function TablesPage() {
   )
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 md:p-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Link to="/dashboard/overview" className="text-sm text-gray-400 hover:text-gray-600">← Admin-Panel</Link>
         <span className="text-gray-200">/</span>

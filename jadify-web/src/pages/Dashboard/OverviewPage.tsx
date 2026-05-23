@@ -69,7 +69,7 @@ export function OverviewPage() {
   const isRestaurant = businessType === 'Restaurant'
 
   return (
-    <div className="px-6 py-6 max-w-6xl space-y-6">
+    <div className="px-4 py-4 md:px-6 md:py-6 max-w-6xl space-y-4 md:space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -99,14 +99,14 @@ export function OverviewPage() {
       ) : null}
 
       {/* Management grid */}
-      <div className={`grid gap-4 ${isRestaurant ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+      <div className={`grid gap-3 md:gap-4 ${isRestaurant ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
         <ServicesPanel businessId={businessId!} />
         <StaffPanel    businessId={businessId!} />
         {isRestaurant && <TablesPanel businessId={businessId!} />}
       </div>
 
       {/* Bottom row */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-3 md:gap-4">
         <HoursPanel businessId={businessId!} />
         <SchedulePanel schedule={data?.todaySchedule ?? []} loading={isLoading} />
       </div>
