@@ -90,4 +90,87 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
 
         return available;
     }
+
+    public async Task<IReadOnlyList<DateOnly>> GetAvailableDatesAsync(
+        Guid businessId, Guid? staffId, Guid serviceId,
+        int year, int month, CancellationToken ct = default)
+    {
+        var service = await db.Services
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == serviceId && s.BusinessId == businessId && s.IsActive, ct)
+            ?? throw new KeyNotFoundException($"Service {serviceId} not found");
+
+        var allHours = await db.BusinessHours
+            .AsNoTracking()
+            .Where(h => h.BusinessId == businessId)
+            .ToListAsync(ct);
+
+        IEnumerable<Guid> staffIdEnumerable;
+        if (staffId.HasValue)
+        {
+            staffIdEnumerable = [staffId.Value];
+        }
+        else
+        {
+            staffIdEnumerable = await db.StaffServices
+                .AsNoTracking()
+                .Where(ss => ss.ServiceId == serviceId && ss.Staff.BusinessId == businessId && ss.Staff.IsActive)
+                .Select(ss => ss.StaffId)
+                .ToListAsync(ct);
+        }
+
+        var staffIds = staffIdEnumerable.ToList();
+        if (staffIds.Count == 0) return [];
+
+        var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var monthEnd   = monthStart.AddMonths(1);
+
+        var bookings = await db.Bookings
+            .AsNoTracking()
+            .Where(b => staffIds.Contains(b.StaffId)
+                     && b.Status != BookingStatus.Cancelled
+                     && b.StartTime >= monthStart
+                     && b.StartTime < monthEnd)
+            .Select(b => new { b.StaffId, b.StartTime, b.EndTime })
+            .ToListAsync(ct);
+
+        var today     = DateOnly.FromDateTime(DateTime.UtcNow);
+        var available = new List<DateOnly>();
+
+        for (int day = 1; day <= DateTime.DaysInMonth(year, month); day++)
+        {
+            var date = new DateOnly(year, month, day);
+            if (date < today) continue;
+
+            var hours = allHours.FirstOrDefault(h => h.DayOfWeek == date.DayOfWeek);
+            if (hours is null || hours.IsClosed) continue;
+
+            var open  = DateTimeHelper.Combine(date, hours.OpenTime);
+            var close = DateTimeHelper.Combine(date, hours.CloseTime);
+
+            var dayBookings = bookings
+                .Where(b => b.StartTime >= open && b.StartTime < close)
+                .ToList();
+
+            bool hasSlot = false;
+            foreach (var slotStart in DateTimeHelper.GenerateSlots(open, close, SlotIntervalMinutes))
+            {
+                var slotEnd = slotStart.AddMinutes(service.DurationMinutes);
+                if (slotEnd > close) break;
+
+                if (staffIds.Any(sid => !dayBookings.Any(b =>
+                        b.StaffId == sid &&
+                        slotStart < b.EndTime &&
+                        slotEnd   > b.StartTime)))
+                {
+                    hasSlot = true;
+                    break;
+                }
+            }
+
+            if (hasSlot) available.Add(date);
+        }
+
+        return available;
+    }
 }

@@ -35,6 +35,22 @@ export const availabilityApi = {
     const q = new URLSearchParams({ ...params } as Record<string, string>)
     return api.get<TimeSlot[]>(`/availability?${q}`)
   },
+  getAvailableDates: (params: {
+    businessId: string
+    serviceId: string
+    year: number
+    month: number
+    staffId?: string
+  }) => {
+    const q = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params)
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)])
+      )
+    )
+    return api.get<string[]>(`/availability/month?${q}`)
+  },
 }
 
 export const bookingApi = {

@@ -25,6 +25,24 @@ public class BookingController(
         => Ok(await availabilityService.GetAvailableSlotsAsync(businessId, staffId, serviceId, date, ct));
 
     /// <summary>
+    /// Returns all dates in a month that have at least one available slot.
+    /// Response is an array of "yyyy-MM-dd" strings.
+    /// </summary>
+    [HttpGet("api/availability/month")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetAvailableMonth(
+        [FromQuery] Guid  businessId,
+        [FromQuery] Guid  serviceId,
+        [FromQuery] int   year,
+        [FromQuery] int   month,
+        [FromQuery] Guid? staffId,
+        CancellationToken ct)
+    {
+        var dates = await availabilityService.GetAvailableDatesAsync(businessId, staffId, serviceId, year, month, ct);
+        return Ok(dates.Select(d => d.ToString("yyyy-MM-dd")).ToList());
+    }
+
+    /// <summary>
     /// Creates a booking and a Stripe PaymentIntent. Returns the PaymentIntent
     /// clientSecret so the frontend can complete the payment with Stripe Elements.
     /// </summary>

@@ -15,4 +15,13 @@ public interface IAvailabilityService
         Guid    serviceId,
         DateOnly date,
         CancellationToken ct = default);
+
+    /// <summary>Returns all dates in the given month that have at least one available slot.</summary>
+    Task<IReadOnlyList<DateOnly>> GetAvailableDatesAsync(
+        Guid    businessId,
+        Guid?   staffId,
+        Guid    serviceId,
+        int     year,
+        int     month,
+        CancellationToken ct = default);
 }
