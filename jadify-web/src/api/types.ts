@@ -39,15 +39,28 @@ export interface TimeSlot {
   end: string
 }
 
+export interface CreatePaymentIntentRequest {
+  businessId: string
+  staffId?: string
+  serviceId: string
+  startTime: string
+}
+
+export interface CreatePaymentIntentResponse {
+  clientSecret: string
+  amount: number
+}
+
 export interface CreateBookingRequest {
   businessId: string
-  staffId?: string        // omit to let backend pick any available staff
+  staffId?: string
   serviceId: string
   startTime: string
   customerName: string
   customerEmail: string
   customerPhone?: string
   notes?: string
+  paymentIntentId?: string
 }
 
 export interface BookingResponse {
@@ -129,6 +142,13 @@ export interface StaffOwnerResponse {
   isActive: boolean
   createdAt: string
   serviceIds: string[]
+}
+
+export interface StaffHoursDto {
+  dayOfWeek: number   // 0 = Sunday … 6 = Saturday
+  startTime: string   // "HH:mm"
+  endTime: string     // "HH:mm"
+  isWorking: boolean
 }
 
 export interface TableResponse {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { bookingApi, type BusinessPublicResponse } from '../../api'
@@ -21,47 +21,37 @@ function formatDateTime(iso: string) {
 }
 
 export function StepPayment(props: Props) {
-  const [clientSecret, setClientSecret] = useState<string | null>(props.state.clientSecret)
-  const [bookingId, setBookingId] = useState<string | null>(props.state.bookingId)
-  const [creating, setCreating] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const called = useRef(false)
 
+  // Step 1: get a PaymentIntent from backend (no booking saved yet)
   useEffect(() => {
-    if (bookingId) return
-    setCreating(true)
+    if (called.current) return
+    called.current = true
     bookingApi
-      .create({
+      .createIntent({
         businessId: props.business.id,
         staffId: props.state.staff?.id,
         serviceId: props.state.service!.id,
         startTime: props.state.startTime!,
-        customerName: props.state.customerName,
-        customerEmail: props.state.customerEmail,
-        customerPhone: props.state.customerPhone || undefined,
-        notes: props.state.notes || undefined,
       })
-      .then(booking => {
-        setBookingId(booking.id)
-        setClientSecret(booking.clientSecret ?? null)
-        props.onBookingCreated(booking.id, booking.clientSecret ?? null)
-      })
-      .catch(err => setCreateError(err.message))
-      .finally(() => setCreating(false))
-  // run once on mount
+      .then(r => setClientSecret(r.clientSecret))
+      .catch(err => setLoadError(err.message ?? 'Fehler beim Laden'))
+      .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (creating) {
-    return (
-      <div className="text-center py-12 text-gray-500">Buchung wird erstellt…</div>
-    )
+  if (loading) {
+    return <div className="text-center py-12 text-gray-500">Wird vorbereitet…</div>
   }
 
-  if (createError) {
+  if (loadError) {
     return (
       <div>
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
-          {createError}
+          {loadError}
         </div>
         <button onClick={props.onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
           ← Zurück
@@ -70,25 +60,15 @@ export function StepPayment(props: Props) {
     )
   }
 
-  if (!clientSecret) {
-    return (
-      <div>
-        <p className="text-sm text-gray-600 mb-4">Buchung erstellt — keine Zahlung erforderlich.</p>
-        <button
-          onClick={props.onComplete}
-          className="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          Buchung bestätigen
-        </button>
-      </div>
-    )
-  }
+  if (!clientSecret) return null
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
       <PaymentForm
         state={props.state}
+        business={props.business}
         clientSecret={clientSecret}
+        onBookingCreated={props.onBookingCreated}
         onComplete={props.onComplete}
         onBack={props.onBack}
       />
@@ -98,16 +78,22 @@ export function StepPayment(props: Props) {
 
 function PaymentForm({
   state,
+  business,
+  clientSecret,
+  onBookingCreated,
   onComplete,
   onBack,
 }: {
   state: BookingState
+  business: BusinessPublicResponse
   clientSecret: string
+  onBookingCreated: (bookingId: string, clientSecret: string | null) => void
   onComplete: () => void
   onBack: () => void
 }) {
   const stripe = useStripe()
   const elements = useElements()
+  const [elementReady, setElementReady] = useState(false)
   const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
 
@@ -117,17 +103,60 @@ function PaymentForm({
     setPaying(true)
     setPayError(null)
 
-    const { error } = await stripe.confirmPayment({
+    // Save booking details before redirect so we can restore them after
+    sessionStorage.setItem('jadify_pending_booking', JSON.stringify({
+      businessId: business.id,
+      staffId: state.staff?.id,
+      serviceId: state.service!.id,
+      startTime: state.startTime!,
+      customerName: state.customerName,
+      customerEmail: state.customerEmail,
+      customerPhone: state.customerPhone || undefined,
+      notes: state.notes || undefined,
+    }))
+
+    // Step 2: confirm payment — may redirect for TWINT/3DS
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.href },
+      confirmParams: {
+        return_url: `${window.location.origin}/book/${business.slug}/payment-complete`,
+      },
       redirect: 'if_required',
     })
 
     if (error) {
-      setPayError(error.message ?? 'Payment failed')
+      sessionStorage.removeItem('jadify_pending_booking')
+      setPayError(error.message ?? 'Zahlung fehlgeschlagen')
       setPaying(false)
-    } else {
+      return
+    }
+
+    // Payment succeeded without redirect — create booking directly
+    await createBooking(paymentIntent?.id)
+  }
+
+  async function createBooking(paymentIntentId?: string) {
+    const raw = sessionStorage.getItem('jadify_pending_booking')
+    if (!raw) return
+    const details = JSON.parse(raw)
+    sessionStorage.removeItem('jadify_pending_booking')
+
+    try {
+      const booking = await bookingApi.create({ ...details, paymentIntentId })
+      onBookingCreated(booking.id, null)
       onComplete()
+    } catch (err: unknown) {
+      let msg = 'Buchung konnte nicht gespeichert werden'
+      if (err instanceof Error) {
+        try {
+          const parsed = JSON.parse(err.message)
+          msg = parsed.detail ?? parsed.title ?? err.message
+        } catch {
+          msg = err.message
+        }
+      }
+      setPayError(msg)
+      setPaying(false)
     }
   }
 
@@ -142,16 +171,14 @@ function PaymentForm({
           <span className="font-medium">CHF {state.service?.price.toFixed(2)}</span>
         </div>
         <div className="text-gray-500 mt-0.5">
-          {state.startTime && formatDateTime(state.startTime)} · {state.staff?.name}
+          {state.startTime && formatDateTime(state.startTime)} · {state.staff?.name ?? 'Beliebig'}
         </div>
         <div className="text-gray-500">{state.customerName}</div>
       </div>
 
       <form onSubmit={handlePay} className="grid gap-4">
-        <PaymentElement />
-        {payError && (
-          <p className="text-red-600 text-sm">{payError}</p>
-        )}
+        <PaymentElement onReady={() => setElementReady(true)} />
+        {payError && <p className="text-red-600 text-sm">{payError}</p>}
         <div className="flex gap-3">
           <button
             type="button"
@@ -163,7 +190,7 @@ function PaymentForm({
           </button>
           <button
             type="submit"
-            disabled={!stripe || paying}
+            disabled={!stripe || !elementReady || paying}
             className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors"
           >
             {paying ? 'Wird verarbeitet…' : `CHF ${state.service?.price.toFixed(2)} bezahlen`}

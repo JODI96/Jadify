@@ -21,13 +21,40 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             .FirstOrDefaultAsync(s => s.Id == serviceId && s.BusinessId == businessId && s.IsActive, ct)
             ?? throw new KeyNotFoundException($"Service {serviceId} not found for business {businessId}");
 
-        // 2. Get business hours for the requested day
-        var hours = await db.BusinessHours
-            .AsNoTracking()
-            .FirstOrDefaultAsync(h => h.BusinessId == businessId && h.DayOfWeek == date.DayOfWeek, ct);
+        // 2. Determine working hours for this day.
+        //    Staff-specific hours take precedence over business hours.
+        TimeOnly open, close;
+        if (staffId.HasValue)
+        {
+            var staffDay = await db.StaffHours
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.StaffId == staffId && h.DayOfWeek == date.DayOfWeek, ct);
 
-        if (hours is null || hours.IsClosed)
-            return [];
+            if (staffDay is not null)
+            {
+                if (!staffDay.IsWorking) return [];
+                open  = staffDay.StartTime;
+                close = staffDay.EndTime;
+            }
+            else
+            {
+                var bh = await db.BusinessHours
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(h => h.BusinessId == businessId && h.DayOfWeek == date.DayOfWeek, ct);
+                if (bh is null || bh.IsClosed) return [];
+                open  = bh.OpenTime;
+                close = bh.CloseTime;
+            }
+        }
+        else
+        {
+            var bh = await db.BusinessHours
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.BusinessId == businessId && h.DayOfWeek == date.DayOfWeek, ct);
+            if (bh is null || bh.IsClosed) return [];
+            open  = bh.OpenTime;
+            close = bh.CloseTime;
+        }
 
         // 3. Resolve which staff members are relevant
         List<Guid> staffIdList;
@@ -69,17 +96,17 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             .ToListAsync(ct);
 
         // 5. Generate all possible start times at SlotIntervalMinutes boundaries
-        var open  = DateTimeHelper.Combine(date, hours.OpenTime);
-        var close = DateTimeHelper.Combine(date, hours.CloseTime);
+        var openDt  = DateTimeHelper.Combine(date, open);
+        var closeDt = DateTimeHelper.Combine(date, close);
 
         var available = new List<TimeSlot>();
 
-        foreach (var slotStart in DateTimeHelper.GenerateSlots(open, close, SlotIntervalMinutes))
+        foreach (var slotStart in DateTimeHelper.GenerateSlots(openDt, closeDt, SlotIntervalMinutes))
         {
             var slotEnd = slotStart.AddMinutes(service.DurationMinutes);
 
-            // Slot must fit entirely within business hours
-            if (slotEnd > close)
+            // Slot must fit entirely within hours
+            if (slotEnd > closeDt)
                 break;
 
             // For each candidate staff, check if this slot is free for at least one of them.
@@ -106,7 +133,7 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             .FirstOrDefaultAsync(s => s.Id == serviceId && s.BusinessId == businessId && s.IsActive, ct)
             ?? throw new KeyNotFoundException($"Service {serviceId} not found");
 
-        var allHours = await db.BusinessHours
+        var allBusinessHours = await db.BusinessHours
             .AsNoTracking()
             .Where(h => h.BusinessId == businessId)
             .ToListAsync(ct);
@@ -134,6 +161,12 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
 
         if (staffIds.Count == 0) return [];
 
+        // Load personal hours for all relevant staff (empty = use business hours)
+        var allStaffHours = await db.StaffHours
+            .AsNoTracking()
+            .Where(h => staffIds.Contains(h.StaffId))
+            .ToListAsync(ct);
+
         var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
         var monthEnd   = monthStart.AddMonths(1);
 
@@ -154,30 +187,48 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             var date = new DateOnly(year, month, day);
             if (date < today) continue;
 
-            var hours = allHours.FirstOrDefault(h => h.DayOfWeek == date.DayOfWeek);
-            if (hours is null || hours.IsClosed) continue;
-
-            var open  = DateTimeHelper.Combine(date, hours.OpenTime);
-            var close = DateTimeHelper.Combine(date, hours.CloseTime);
-
-            var dayBookings = bookings
-                .Where(b => b.StartTime >= open && b.StartTime < close)
-                .ToList();
-
             bool hasSlot = false;
-            foreach (var slotStart in DateTimeHelper.GenerateSlots(open, close, SlotIntervalMinutes))
-            {
-                var slotEnd = slotStart.AddMinutes(service.DurationMinutes);
-                if (slotEnd > close) break;
 
-                if (staffIds.Any(sid => !dayBookings.Any(b =>
-                        b.StaffId == sid &&
-                        slotStart < b.EndTime &&
-                        slotEnd   > b.StartTime)))
+            foreach (var sid in staffIds)
+            {
+                // Resolve hours for this staff member on this day
+                var personalDay = allStaffHours.FirstOrDefault(h => h.StaffId == sid && h.DayOfWeek == date.DayOfWeek);
+                TimeOnly open, close;
+
+                if (personalDay is not null)
                 {
-                    hasSlot = true;
-                    break;
+                    if (!personalDay.IsWorking) continue;
+                    open  = personalDay.StartTime;
+                    close = personalDay.EndTime;
                 }
+                else
+                {
+                    var bh = allBusinessHours.FirstOrDefault(h => h.DayOfWeek == date.DayOfWeek);
+                    if (bh is null || bh.IsClosed) continue;
+                    open  = bh.OpenTime;
+                    close = bh.CloseTime;
+                }
+
+                var openDt  = DateTimeHelper.Combine(date, open);
+                var closeDt = DateTimeHelper.Combine(date, close);
+
+                var dayBookings = bookings
+                    .Where(b => b.StaffId == sid && b.StartTime >= openDt && b.StartTime < closeDt)
+                    .ToList();
+
+                foreach (var slotStart in DateTimeHelper.GenerateSlots(openDt, closeDt, SlotIntervalMinutes))
+                {
+                    var slotEnd = slotStart.AddMinutes(service.DurationMinutes);
+                    if (slotEnd > closeDt) break;
+
+                    if (!dayBookings.Any(b => slotStart < b.EndTime && slotEnd > b.StartTime))
+                    {
+                        hasSlot = true;
+                        break;
+                    }
+                }
+
+                if (hasSlot) break;
             }
 
             if (hasSlot) available.Add(date);

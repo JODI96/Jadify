@@ -43,8 +43,18 @@ public class BookingController(
     }
 
     /// <summary>
-    /// Creates a booking and a Stripe PaymentIntent. Returns the PaymentIntent
-    /// clientSecret so the frontend can complete the payment with Stripe Elements.
+    /// Creates a Stripe PaymentIntent without saving a booking.
+    /// Call this first, let the customer pay, then POST /api/bookings.
+    /// </summary>
+    [HttpPost("api/payments/intent")]
+    [AllowAnonymous]
+    public async Task<ActionResult<CreatePaymentIntentResponse>> CreateIntent(
+        CreatePaymentIntentRequest request, CancellationToken ct)
+        => Ok(await bookingService.CreatePaymentIntentAsync(request, ct));
+
+    /// <summary>
+    /// Creates a booking AFTER payment is confirmed.
+    /// Pass the PaymentIntentId from Stripe so the booking is saved as Confirmed.
     /// </summary>
     [HttpPost("api/bookings")]
     [AllowAnonymous]
@@ -82,7 +92,7 @@ public class BookingController(
     [Authorize]
     public async Task<ActionResult<IReadOnlyList<BookingSummaryDto>>> GetForBusiness(
         Guid              businessId,
-        [FromQuery] DateOnly date,
+        [FromQuery] DateOnly? date,
         [FromQuery] BookingStatus? status,
         CancellationToken ct)
         => Ok(await bookingService.GetForBusinessAsync(businessId, date, status, ct));

@@ -18,6 +18,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
     public DbSet<Subscription>  Subscriptions => Set<Subscription>();
     public DbSet<Payment>       Payments      => Set<Payment>();
     public DbSet<Table>         Tables        => Set<Table>();
+    public DbSet<StaffHours>    StaffHours    => Set<StaffHours>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -33,6 +34,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
         ConfigureSubscription(builder);
         ConfigurePayment(builder);
         ConfigureTable(builder);
+        ConfigureStaffHours(builder);
     }
 
     private static void ConfigureBusiness(ModelBuilder builder)
@@ -192,6 +194,19 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
              .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(t => t.BusinessId);
+        });
+    }
+
+    private static void ConfigureStaffHours(ModelBuilder builder)
+    {
+        builder.Entity<StaffHours>(e =>
+        {
+            e.HasOne(sh => sh.Staff)
+             .WithMany(s => s.StaffHours)
+             .HasForeignKey(sh => sh.StaffId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(sh => new { sh.StaffId, sh.DayOfWeek });
         });
     }
 }

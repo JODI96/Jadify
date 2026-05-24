@@ -4,9 +4,12 @@ import type {
   BookingResponse,
   BusinessPublicResponse,
   CreateBookingRequest,
+  CreatePaymentIntentRequest,
+  CreatePaymentIntentResponse,
   DashboardResponse,
   ServiceOwnerResponse,
   SetBusinessHoursRequest,
+  StaffHoursDto,
   StaffOwnerResponse,
   SubscriptionResponse,
   TableResponse,
@@ -56,6 +59,8 @@ export const availabilityApi = {
 }
 
 export const bookingApi = {
+  createIntent: (req: CreatePaymentIntentRequest) =>
+    api.post<CreatePaymentIntentResponse>('/payments/intent', req),
   create: (req: CreateBookingRequest) =>
     api.post<BookingResponse>('/bookings', req),
   getById: (id: string) =>
@@ -64,8 +69,10 @@ export const bookingApi = {
     api.put<BookingResponse>(`/bookings/${id}/confirm`, {}),
   cancel: (id: string, reason?: string) =>
     api.put<void>(`/bookings/${id}/cancel`, { reason }),
-  forBusiness: (businessId: string) =>
-    api.get<BookingResponse[]>(`/businesses/${businessId}/bookings`),
+  forBusiness: (businessId: string, date?: string) => {
+    const q = date ? `?date=${date}` : ''
+    return api.get<BookingResponse[]>(`/businesses/${businessId}/bookings${q}`)
+  },
 }
 
 export const authApi = {
@@ -118,6 +125,10 @@ export const staffOwnerApi = {
     api.put<StaffOwnerResponse>(`/staff/${id}`, req),
   remove: (id: string) =>
     api.delete<void>(`/staff/${id}`),
+  getHours: (staffId: string) =>
+    api.get<StaffHoursDto[]>(`/staff/${staffId}/hours`),
+  setHours: (staffId: string, hours: StaffHoursDto[]) =>
+    api.post<StaffHoursDto[]>(`/staff/${staffId}/hours`, { hours }),
 }
 
 export const tableApi = {

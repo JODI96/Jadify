@@ -106,6 +106,53 @@ public class StaffController(JadifyDbContext db, IServiceProvider services, ICon
         return NoContent();
     }
 
+    [HttpGet("api/staff/{id:guid}/hours")]
+    public async Task<ActionResult<IReadOnlyList<StaffHoursDto>>> GetHours(Guid id, CancellationToken ct)
+    {
+        var member = await db.Staff.FindAsync([id], ct)
+            ?? throw new KeyNotFoundException($"Staff member {id} not found");
+        await VerifyOwnershipAsync(member.BusinessId, ct);
+
+        var hours = await db.StaffHours
+            .Where(h => h.StaffId == id)
+            .OrderBy(h => h.DayOfWeek)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        return Ok(hours.Select(h => new StaffHoursDto(
+            h.DayOfWeek,
+            h.StartTime.ToString("HH:mm"),
+            h.EndTime.ToString("HH:mm"),
+            h.IsWorking)).ToList());
+    }
+
+    [HttpPost("api/staff/{id:guid}/hours")]
+    public async Task<ActionResult<IReadOnlyList<StaffHoursDto>>> SetHours(
+        Guid id, SetStaffHoursRequest request, CancellationToken ct)
+    {
+        var member = await db.Staff.FindAsync([id], ct)
+            ?? throw new KeyNotFoundException($"Staff member {id} not found");
+        await VerifyOwnershipAsync(member.BusinessId, ct);
+
+        var existing = await db.StaffHours.Where(h => h.StaffId == id).ToListAsync(ct);
+        db.StaffHours.RemoveRange(existing);
+
+        var newHours = request.Hours.Select(h => new Jadify.API.Shared.Models.StaffHours
+        {
+            StaffId   = id,
+            DayOfWeek = h.DayOfWeek,
+            StartTime = TimeOnly.Parse(h.StartTime),
+            EndTime   = TimeOnly.Parse(h.EndTime),
+            IsWorking = h.IsWorking,
+        }).ToList();
+
+        db.StaffHours.AddRange(newHours);
+        await db.SaveChangesAsync(ct);
+
+        return Ok(newHours.Select(h => new StaffHoursDto(
+            h.DayOfWeek, h.StartTime.ToString("HH:mm"), h.EndTime.ToString("HH:mm"), h.IsWorking)).ToList());
+    }
+
     [HttpPost("api/staff/{id:guid}/photo")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<string>> UploadPhoto(Guid id, IFormFile file, CancellationToken ct)

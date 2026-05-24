@@ -1,5 +1,14 @@
 namespace Jadify.API.Features.Staff;
 
+public record StaffHoursDto(
+    DayOfWeek DayOfWeek,
+    string    StartTime,   // "HH:mm"
+    string    EndTime,     // "HH:mm"
+    bool      IsWorking
+);
+
+public record SetStaffHoursRequest(IReadOnlyList<StaffHoursDto> Hours);
+
 public record StaffResponse(
     Guid                Id,
     string              Name,

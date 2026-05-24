@@ -6,15 +6,27 @@ public record TimeSlot(DateTime Start, DateTime End);
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
+// Step 1: get a Stripe PaymentIntent without saving anything to the database
+public record CreatePaymentIntentRequest(
+    Guid     BusinessId,
+    Guid?    StaffId,
+    Guid     ServiceId,
+    DateTime StartTime
+);
+
+public record CreatePaymentIntentResponse(string ClientSecret, decimal Amount);
+
+// Step 2: create the booking AFTER payment is confirmed
 public record CreateBookingRequest(
-    Guid    BusinessId,
-    Guid?   StaffId,      // null = pick any available staff
-    Guid    ServiceId,
+    Guid     BusinessId,
+    Guid?    StaffId,
+    Guid     ServiceId,
     DateTime StartTime,
-    string  CustomerName,
-    string  CustomerEmail,
-    string? CustomerPhone,
-    string? Notes
+    string   CustomerName,
+    string   CustomerEmail,
+    string?  CustomerPhone,
+    string?  Notes,
+    string?  PaymentIntentId   // provided after Stripe payment succeeds
 );
 
 // ── Cancel ────────────────────────────────────────────────────────────────────
@@ -43,6 +55,7 @@ public record BookingResponse(
 public record BookingSummaryDto(
     Guid     Id,
     string   CustomerName,
+    string   CustomerEmail,
     string   ServiceName,
     string   StaffName,
     DateTime StartTime,

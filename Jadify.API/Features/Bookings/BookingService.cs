@@ -12,8 +12,63 @@ namespace Jadify.API.Features.Bookings;
 public class BookingService(
     JadifyDbContext db,
     IStripeClient stripeClient,
+    IHostEnvironment env,
     ILogger<BookingService> logger) : IBookingService
 {
+    public async Task<CreatePaymentIntentResponse> CreatePaymentIntentAsync(
+        CreatePaymentIntentRequest request, CancellationToken ct = default)
+    {
+        var service = await db.Services
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == request.ServiceId && s.BusinessId == request.BusinessId && s.IsActive, ct)
+            ?? throw new KeyNotFoundException($"Service {request.ServiceId} not found");
+
+        var endTime = request.StartTime.AddMinutes(service.DurationMinutes);
+
+        // Verify the slot is still free (read-only check, no lock)
+        if (request.StaffId.HasValue)
+        {
+            var conflict = await db.Bookings.AnyAsync(b =>
+                b.StaffId == request.StaffId
+             && b.Status  != BookingStatus.Cancelled
+             && b.StartTime < endTime
+             && b.EndTime   > request.StartTime, ct);
+            if (conflict)
+                throw new InvalidOperationException("This time slot is no longer available");
+        }
+
+        var subscription = await db.Subscriptions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.BusinessId == request.BusinessId, ct);
+
+        var feePercent = (subscription?.Tier ?? SubscriptionTier.Free) switch
+        {
+            SubscriptionTier.Growth => JadifyConstants.Tiers.GrowthFeePercent,
+            SubscriptionTier.Pro    => JadifyConstants.Tiers.ProFeePercent,
+            _                       => JadifyConstants.Tiers.FreeFeePercent
+        };
+        var feeAmount = Math.Round(service.Price * feePercent, 2);
+
+        var piOptions = new PaymentIntentCreateOptions
+        {
+            Amount   = ToStripeAmount(service.Price),
+            Currency = "chf",
+            Metadata = new Dictionary<string, string>
+            {
+                ["business_id"] = request.BusinessId.ToString(),
+                ["service_id"]  = request.ServiceId.ToString(),
+            }
+        };
+
+        if (env.IsProduction() && feeAmount > 0)
+            piOptions.ApplicationFeeAmount = ToStripeAmount(feeAmount);
+
+        var piService = new PaymentIntentService(stripeClient);
+        var intent = await piService.CreateAsync(piOptions, cancellationToken: ct);
+
+        return new CreatePaymentIntentResponse(intent.ClientSecret, service.Price);
+    }
+
     public async Task<BookingResponse> CreateAsync(
         CreateBookingRequest request, CancellationToken ct = default)
     {
@@ -94,51 +149,30 @@ public class BookingService(
         };
         var feeAmount = Math.Round(service.Price * feePercent, 2);
 
-        // 5. Persist the booking in Pending state
+        // 5. Persist the booking — Confirmed if payment already done, otherwise Pending
+        var isPrepaid = request.PaymentIntentId is not null;
         var booking = new Booking
         {
-            BusinessId  = request.BusinessId,
-            StaffId     = staff.Id,
-            ServiceId   = request.ServiceId,
-            CustomerId  = customer.Id,
-            StartTime   = request.StartTime,
-            EndTime     = endTime,
-            Status      = BookingStatus.Pending,
-            TotalAmount = service.Price,
-            FeeAmount   = feeAmount,
-            Notes       = request.Notes
+            BusinessId             = request.BusinessId,
+            StaffId                = staff.Id,
+            ServiceId              = request.ServiceId,
+            CustomerId             = customer.Id,
+            StartTime              = request.StartTime,
+            EndTime                = endTime,
+            Status                 = isPrepaid ? BookingStatus.Confirmed : BookingStatus.Pending,
+            TotalAmount            = service.Price,
+            FeeAmount              = feeAmount,
+            Notes                  = request.Notes,
+            StripePaymentIntentId  = request.PaymentIntentId
         };
         db.Bookings.Add(booking);
         await db.SaveChangesAsync(ct);
-
-        // 6. Create Stripe PaymentIntent
-        // ApplicationFeeAmount routes the platform cut via Stripe Connect.
-        var piOptions = new PaymentIntentCreateOptions
-        {
-            Amount   = ToStripeAmount(booking.TotalAmount),
-            Currency = "chf",
-            Metadata = new Dictionary<string, string>
-            {
-                ["booking_id"]  = booking.Id.ToString(),
-                ["business_id"] = booking.BusinessId.ToString()
-            }
-        };
-
-        if (booking.FeeAmount > 0)
-            piOptions.ApplicationFeeAmount = ToStripeAmount(booking.FeeAmount);
-
-        var piService = new PaymentIntentService(stripeClient);
-        var intent = await piService.CreateAsync(piOptions, cancellationToken: ct);
-
-        booking.StripePaymentIntentId = intent.Id;
-        await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 
-        logger.LogInformation("Booking {BookingId} created with PaymentIntent {IntentId}",
-            booking.Id, intent.Id);
+        logger.LogInformation("Booking {BookingId} created (prepaid={Prepaid})", booking.Id, isPrepaid);
 
         return ToResponse(booking, business.Name, staff.Name, service.Name,
-            customer.Name, customer.Email, intent.ClientSecret);
+            customer.Name, customer.Email, null);
     }
 
     public async Task<BookingResponse> ConfirmAsync(Guid bookingId, CancellationToken ct = default)
@@ -210,19 +244,21 @@ public class BookingService(
     }
 
     public async Task<IReadOnlyList<BookingSummaryDto>> GetForBusinessAsync(
-        Guid businessId, DateOnly date, BookingStatus? status, CancellationToken ct = default)
+        Guid businessId, DateOnly? date, BookingStatus? status, CancellationToken ct = default)
     {
-        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var dayEnd   = dayStart.AddDays(1);
-
         var query = db.Bookings
             .Include(b => b.Customer)
             .Include(b => b.Service)
             .Include(b => b.Staff)
             .AsNoTracking()
-            .Where(b => b.BusinessId == businessId
-                     && b.StartTime >= dayStart
-                     && b.StartTime <  dayEnd);
+            .Where(b => b.BusinessId == businessId);
+
+        if (date.HasValue)
+        {
+            var dayStart = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var dayEnd   = dayStart.AddDays(1);
+            query = query.Where(b => b.StartTime >= dayStart && b.StartTime < dayEnd);
+        }
 
         if (status.HasValue)
             query = query.Where(b => b.Status == status.Value);
@@ -234,6 +270,7 @@ public class BookingService(
         return bookings.Select(b => new BookingSummaryDto(
             b.Id,
             b.Customer.Name,
+            b.Customer.Email,
             b.Service.Name,
             b.Staff.Name,
             b.StartTime,

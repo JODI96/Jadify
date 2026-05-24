@@ -33,11 +33,15 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         context.Response.StatusCode  = statusCode;
         context.Response.ContentType = "application/problem+json";
 
+        var detail = exception.InnerException is not null
+            ? $"{exception.Message} | Inner: {exception.InnerException.Message}"
+            : exception.Message;
+
         var problem = new ProblemDetails
         {
             Status   = statusCode,
             Title    = title,
-            Detail   = exception.Message,
+            Detail   = detail,
             Instance = context.Request.Path
         };
 

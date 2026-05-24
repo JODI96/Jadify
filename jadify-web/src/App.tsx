@@ -4,6 +4,7 @@ import { AuthProvider } from './components/AuthProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { BookingPage } from './pages/BookingPage'
+import { PaymentCompletePage } from './pages/BookingPage/PaymentCompletePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { DashboardLayout } from './pages/Dashboard/DashboardLayout'
@@ -22,6 +23,7 @@ export default function App() {
             {/* Public */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/book/:slug" element={<BookingPage />} />
+            <Route path="/book/:slug/payment-complete" element={<PaymentCompletePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 

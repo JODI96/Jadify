@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { availabilityApi, type BusinessPublicResponse, type ServiceItem, type StaffItem, type TimeSlot } from '../../api'
-// StaffItem used in Props
 
 interface Props {
   business: BusinessPublicResponse
@@ -94,32 +93,6 @@ export function StepSlot({ business, service, staff, onSelect, onBack }: Props) 
       <p className="text-sm text-gray-500 mb-4">
         {service.name} · {service.durationMinutes} min · CHF {service.price.toFixed(2)}
       </p>
-
-      {/* Staff selector */}
-      {business.staff.length > 1 && (
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Mitarbeiter</label>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => { setSelectedStaff(null); setSelectedDate(null) }}
-              className={`px-3 py-1.5 rounded-lg border text-sm transition-colors
-                ${!selectedStaff ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
-            >
-              Beliebig
-            </button>
-            {business.staff.map(s => (
-              <button
-                key={s.id}
-                onClick={() => { setSelectedStaff(s); setSelectedDate(null) }}
-                className={`px-3 py-1.5 rounded-lg border text-sm transition-colors
-                  ${selectedStaff?.id === s.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
-              >
-                {s.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Calendar */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5">

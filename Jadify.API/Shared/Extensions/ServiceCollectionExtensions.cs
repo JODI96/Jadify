@@ -60,7 +60,10 @@ public static class ServiceCollectionExtensions
         // --- Stripe ---
         var stripeKey = config["Stripe:SecretKey"] ?? string.Empty;
         StripeConfiguration.ApiKey = stripeKey;
-        services.AddSingleton<IStripeClient>(_ => new StripeClient(stripeKey));
+        // Use a placeholder when unconfigured so DI resolution doesn't blow up on
+        // unrelated endpoints. Actual Stripe API calls will still fail at call time.
+        services.AddSingleton<IStripeClient>(_ =>
+            new StripeClient(string.IsNullOrWhiteSpace(stripeKey) ? "sk_test_dev_placeholder" : stripeKey));
 
         // --- Azure Blob Storage ---
         var blobConnStr = config["Azure:BlobStorageConnectionString"] ?? string.Empty;
