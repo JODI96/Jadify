@@ -29,7 +29,6 @@ function Avatar({ name, avatarUrl, size = 72 }: { name: string; avatarUrl?: stri
     <div
       style={{ width: size, height: size }}
       className={`${color} rounded-full flex items-center justify-center text-white font-semibold`}
-      style2={{ fontSize: size * 0.35 }}
     >
       <span style={{ fontSize: size * 0.35 }}>{initials(name)}</span>
     </div>

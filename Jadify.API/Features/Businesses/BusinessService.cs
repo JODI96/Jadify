@@ -82,6 +82,17 @@ public class BusinessService(
         return business.LogoUrl;
     }
 
+    public async Task<IReadOnlyList<BusinessHoursDto>> GetHoursAsync(Guid id, string ownerId, CancellationToken ct = default)
+    {
+        await GetOwnedAsync(id, ownerId, ct);
+        var hours = await db.BusinessHours
+            .Where(h => h.BusinessId == id)
+            .OrderBy(h => h.DayOfWeek)
+            .AsNoTracking()
+            .ToListAsync(ct);
+        return hours.Select(ToHoursDto).ToList();
+    }
+
     public async Task<IReadOnlyList<BusinessHoursDto>> SetHoursAsync(
         Guid id, string ownerId, SetBusinessHoursRequest request, CancellationToken ct = default)
     {

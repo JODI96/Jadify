@@ -21,6 +21,8 @@ export const businessApi = {
     api.get<BusinessPublicResponse>(`/businesses/${slug}`),
   update: (id: string, req: UpdateBusinessRequest) =>
     api.put<BusinessPublicResponse>(`/businesses/${id}`, req),
+  getHours: (id: string) =>
+    api.get<SetBusinessHoursRequest['hours']>(`/businesses/${id}/hours`),
   setHours: (id: string, req: SetBusinessHoursRequest) =>
     api.post<unknown>(`/businesses/${id}/hours`, req),
 }

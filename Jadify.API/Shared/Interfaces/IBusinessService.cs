@@ -13,6 +13,8 @@ public interface IBusinessService
     Task<string> UploadLogoAsync(
         Guid id, string ownerId, IFormFile file, CancellationToken ct = default);
 
+    Task<IReadOnlyList<BusinessHoursDto>> GetHoursAsync(Guid id, string ownerId, CancellationToken ct = default);
+
     Task<IReadOnlyList<BusinessHoursDto>> SetHoursAsync(
         Guid id, string ownerId, SetBusinessHoursRequest request, CancellationToken ct = default);
 }

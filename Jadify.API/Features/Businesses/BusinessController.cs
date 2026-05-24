@@ -34,6 +34,12 @@ public class BusinessController(IBusinessService businessService) : ControllerBa
         return Ok(new LogoUploadResponse(url));
     }
 
+    /// <summary>Returns the current opening hours for the authenticated owner.</summary>
+    [HttpGet("{id:guid}/hours")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<BusinessHoursDto>>> GetHours(Guid id, CancellationToken ct)
+        => Ok(await businessService.GetHoursAsync(id, User.GetUserId()!, ct));
+
     /// <summary>Replaces all opening hours for the business.</summary>
     [HttpPost("{id:guid}/hours")]
     [Authorize]

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
@@ -8,6 +8,7 @@ import {
   serviceOwnerApi,
   staffOwnerApi,
   tableApi,
+  businessApi,
   type ServiceOwnerResponse,
   type StaffOwnerResponse,
   type TableResponse,
@@ -513,24 +514,42 @@ function TablesPanel({ businessId }: { businessId: string }) {
 
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 
+const DEFAULT_HOURS = Array.from({ length: 7 }, (_, i) => ({
+  dayOfWeek: i, openTime: '09:00', closeTime: '18:00', isClosed: i === 0,
+}))
+
+function toTimeStr(t: string) {
+  // API returns "HH:mm:ss" — trim to "HH:mm"
+  return t.slice(0, 5)
+}
+
 function HoursPanel({ businessId }: { businessId: string }) {
-  const [hours, setHours] = useState(
-    Array.from({ length: 7 }, (_, i) => ({
-      dayOfWeek: i, openTime: '09:00', closeTime: '17:00', isClosed: i === 0,
-    }))
-  )
+  const [hours, setHours] = useState(DEFAULT_HOURS)
   const [saved, setSaved] = useState(false)
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      fetch(`/api/businesses/${businessId}/hours`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('jadify_token')}`,
-        },
-        body: JSON.stringify({ hours }),
-      }).then(r => { if (!r.ok) throw new Error('Fehler') }),
+  const { data: loaded } = useQuery({
+    queryKey: ['business-hours', businessId],
+    queryFn: () => businessApi.getHours(businessId),
+    enabled: !!businessId,
+  })
+
+  useEffect(() => {
+    if (!loaded || loaded.length === 0) return
+    const mapped = DEFAULT_HOURS.map(def => {
+      const found = loaded.find((h: { dayOfWeek: number }) => h.dayOfWeek === def.dayOfWeek)
+      if (!found) return def
+      return {
+        dayOfWeek: found.dayOfWeek,
+        openTime: toTimeStr((found as { openTime: string }).openTime),
+        closeTime: toTimeStr((found as { closeTime: string }).closeTime),
+        isClosed: (found as { isClosed: boolean }).isClosed,
+      }
+    })
+    setHours(mapped)
+  }, [loaded])
+
+  const saveMut = useMutation({
+    mutationFn: () => businessApi.setHours(businessId, { hours }),
     onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000) },
   })
 
@@ -567,11 +586,11 @@ function HoursPanel({ businessId }: { businessId: string }) {
         ))}
       </div>
       <button
-        onClick={() => mutation.mutate()}
-        disabled={mutation.isPending}
+        onClick={() => saveMut.mutate()}
+        disabled={saveMut.isPending}
         className="mt-3 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60"
       >
-        {saved ? 'Gespeichert ✓' : mutation.isPending ? 'Wird gespeichert…' : 'Speichern'}
+        {saved ? 'Gespeichert ✓' : saveMut.isPending ? 'Wird gespeichert…' : 'Speichern'}
       </button>
     </PanelCard>
   )
