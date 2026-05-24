@@ -27,5 +27,6 @@ public record AuthResponse(
     DateTime ExpiresAt,
     Guid BusinessId,
     string Email,
-    string BusinessType
+    string BusinessType,
+    string Slug
 );

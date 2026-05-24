@@ -6,10 +6,11 @@ export interface AuthState {
   businessId: string | null
   email: string | null
   businessType: string | null
+  slug: string | null
 }
 
 export interface AuthContextValue extends AuthState {
-  login: (token: string, refreshToken: string, businessId: string, email: string, businessType: string) => void
+  login: (token: string, refreshToken: string, businessId: string, email: string, businessType: string, slug: string) => void
   logout: () => void
 }
 
@@ -28,5 +29,6 @@ export function loadAuthState(): AuthState {
     businessId: localStorage.getItem('jadify_business_id'),
     email: localStorage.getItem('jadify_email'),
     businessType: localStorage.getItem('jadify_business_type'),
+    slug: localStorage.getItem('jadify_slug'),
   }
 }

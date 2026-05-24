@@ -10,13 +10,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     businessId: string,
     email: string,
     businessType: string,
+    slug: string,
   ) {
     localStorage.setItem('jadify_token', token)
     localStorage.setItem('jadify_refresh', refreshToken)
     localStorage.setItem('jadify_business_id', businessId)
     localStorage.setItem('jadify_email', email)
     localStorage.setItem('jadify_business_type', businessType)
-    setState({ token, refreshToken, businessId, email, businessType })
+    localStorage.setItem('jadify_slug', slug)
+    setState({ token, refreshToken, businessId, email, businessType, slug })
   }
 
   function logout() {
@@ -25,7 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('jadify_business_id')
     localStorage.removeItem('jadify_email')
     localStorage.removeItem('jadify_business_type')
-    setState({ token: null, refreshToken: null, businessId: null, email: null, businessType: null })
+    localStorage.removeItem('jadify_slug')
+    setState({ token: null, refreshToken: null, businessId: null, email: null, businessType: null, slug: null })
   }
 
   return (

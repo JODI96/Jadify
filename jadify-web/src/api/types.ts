@@ -73,6 +73,7 @@ export interface AuthResponse {
   businessId: string
   email: string
   businessType: string
+  slug: string
 }
 
 export interface DashboardResponse {

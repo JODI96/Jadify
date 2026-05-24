@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { QRCodeSVG } from 'qrcode.react'
 import { useAuth } from '../../store/authStore'
 import {
   dashboardApi,
@@ -56,7 +57,7 @@ function KpiCard({ label, value, sub, subColor = 'text-gray-400' }: {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function OverviewPage() {
-  const { businessId, businessType, email } = useAuth()
+  const { businessId, businessType, email, slug } = useAuth()
 
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
@@ -97,6 +98,9 @@ export function OverviewPage() {
           <KpiCard label="Kunden gesamt"      value={String(data.totalCustomers)} />
         </div>
       ) : null}
+
+      {/* Booking link */}
+      {slug && <BookingLinkPanel slug={slug} />}
 
       {/* Management grid */}
       <div className={`grid gap-3 md:gap-4 ${isRestaurant ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
@@ -601,6 +605,60 @@ function SchedulePanel({ schedule, loading }: { schedule: UpcomingBookingItem[];
         </div>
       )}
     </PanelCard>
+  )
+}
+
+// ── Booking Link Panel ────────────────────────────────────────────────────────
+
+function BookingLinkPanel({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false)
+  const [showQr, setShowQr] = useState(false)
+  const url = `${window.location.origin}/book/${slug}`
+
+  function copy() {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-indigo-700 mb-1">Buchungslink für Kunden</p>
+          <p className="text-sm text-indigo-900 font-mono truncate mb-3">{url}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={copy}
+              className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              {copied ? 'Kopiert ✓' : 'Link kopieren'}
+            </button>
+            <button
+              onClick={() => setShowQr(v => !v)}
+              className="text-xs border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              {showQr ? 'QR-Code ausblenden' : 'QR-Code anzeigen'}
+            </button>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              Vorschau →
+            </a>
+          </div>
+        </div>
+        {showQr && (
+          <div className="bg-white p-3 rounded-xl border border-indigo-100 shrink-0">
+            <QRCodeSVG value={url} size={120} />
+            <p className="text-xs text-center text-gray-400 mt-1">Zum Drucken</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
