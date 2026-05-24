@@ -110,9 +110,9 @@ export const serviceOwnerApi = {
 export const staffOwnerApi = {
   list: (businessId: string) =>
     api.get<StaffOwnerResponse[]>(`/businesses/${businessId}/staff`),
-  create: (businessId: string, req: { name: string; email: string }) =>
+  create: (businessId: string, req: { name: string; email: string; avatarUrl?: string; serviceIds?: string[] }) =>
     api.post<StaffOwnerResponse>(`/businesses/${businessId}/staff`, req),
-  update: (id: string, req: { name: string; email: string; isActive: boolean }) =>
+  update: (id: string, req: { name: string; email: string; isActive: boolean; avatarUrl?: string; serviceIds?: string[] }) =>
     api.put<StaffOwnerResponse>(`/staff/${id}`, req),
   remove: (id: string) =>
     api.delete<void>(`/staff/${id}`),

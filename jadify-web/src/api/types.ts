@@ -23,6 +23,7 @@ export interface StaffItem {
   id: string
   name: string
   avatarUrl?: string
+  serviceIds: string[]
 }
 
 export interface ServiceItem {
@@ -40,7 +41,7 @@ export interface TimeSlot {
 
 export interface CreateBookingRequest {
   businessId: string
-  staffId: string
+  staffId?: string        // omit to let backend pick any available staff
   serviceId: string
   startTime: string
   customerName: string
@@ -127,6 +128,7 @@ export interface StaffOwnerResponse {
   avatarUrl?: string
   isActive: boolean
   createdAt: string
+  serviceIds: string[]
 }
 
 export interface TableResponse {

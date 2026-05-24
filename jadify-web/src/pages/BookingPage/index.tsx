@@ -2,18 +2,19 @@ import { useReducer } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { businessApi, type ServiceItem, type StaffItem } from '../../api'
+import { StepStaff } from './StepStaff'
 import { StepService } from './StepService'
 import { StepSlot } from './StepSlot'
 import { StepCustomer } from './StepCustomer'
 import { StepPayment } from './StepPayment'
 import { StepConfirmation } from './StepConfirmation'
 
-export type BookingStep = 'service' | 'slot' | 'customer' | 'payment' | 'confirmation'
+export type BookingStep = 'staff' | 'service' | 'slot' | 'customer' | 'payment' | 'confirmation'
 
 export interface BookingState {
   step: BookingStep
+  staff: StaffItem | null       // null = "Beliebig"
   service: ServiceItem | null
-  staff: StaffItem | null
   startTime: string | null
   endTime: string | null
   customerName: string
@@ -25,21 +26,24 @@ export interface BookingState {
 }
 
 type BookingAction =
+  | { type: 'SELECT_STAFF'; staff: StaffItem | null }
   | { type: 'SELECT_SERVICE'; service: ServiceItem }
-  | { type: 'SELECT_SLOT'; staff: StaffItem; startTime: string; endTime: string }
+  | { type: 'SELECT_SLOT'; startTime: string; endTime: string }
   | { type: 'SUBMIT_CUSTOMER'; name: string; email: string; phone: string; notes: string }
   | { type: 'BOOKING_CREATED'; bookingId: string; clientSecret: string | null }
   | { type: 'PAYMENT_COMPLETE' }
   | { type: 'BACK' }
 
-const stepOrder: BookingStep[] = ['service', 'slot', 'customer', 'payment', 'confirmation']
+const stepOrder: BookingStep[] = ['staff', 'service', 'slot', 'customer', 'payment', 'confirmation']
 
 function reducer(state: BookingState, action: BookingAction): BookingState {
   switch (action.type) {
+    case 'SELECT_STAFF':
+      return { ...state, step: 'service', staff: action.staff, service: null, startTime: null }
     case 'SELECT_SERVICE':
-      return { ...state, step: 'slot', service: action.service, staff: null, startTime: null }
+      return { ...state, step: 'slot', service: action.service, startTime: null }
     case 'SELECT_SLOT':
-      return { ...state, step: 'customer', staff: action.staff, startTime: action.startTime, endTime: action.endTime }
+      return { ...state, step: 'customer', startTime: action.startTime, endTime: action.endTime }
     case 'SUBMIT_CUSTOMER':
       return { ...state, step: 'payment', customerName: action.name, customerEmail: action.email, customerPhone: action.phone, notes: action.notes }
     case 'BOOKING_CREATED':
@@ -54,9 +58,9 @@ function reducer(state: BookingState, action: BookingAction): BookingState {
 }
 
 const initial: BookingState = {
-  step: 'service',
-  service: null,
+  step: 'staff',
   staff: null,
+  service: null,
   startTime: null,
   endTime: null,
   customerName: '',
@@ -67,13 +71,15 @@ const initial: BookingState = {
   clientSecret: null,
 }
 
-const STEP_LABELS: Record<BookingStep, string> = {
-  service: 'Leistung',
-  slot: 'Datum & Zeit',
+const STEP_LABELS: Record<Exclude<BookingStep, 'confirmation'>, string> = {
+  staff:    'Mitarbeiter',
+  service:  'Leistung',
+  slot:     'Datum & Zeit',
   customer: 'Angaben',
-  payment: 'Zahlung',
-  confirmation: 'Bestätigt',
+  payment:  'Zahlung',
 }
+
+const progressSteps = stepOrder.filter(s => s !== 'confirmation') as Array<Exclude<BookingStep, 'confirmation'>>
 
 export function BookingPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -103,8 +109,7 @@ export function BookingPage() {
     )
   }
 
-  const steps = stepOrder.filter(s => s !== 'confirmation') as Array<'service' | 'slot' | 'customer' | 'payment'>
-  const currentIdx = steps.indexOf(state.step as 'service' | 'slot' | 'customer' | 'payment')
+  const currentIdx = progressSteps.indexOf(state.step as Exclude<BookingStep, 'confirmation'>)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,19 +129,20 @@ export function BookingPage() {
       {/* Progress bar */}
       {state.step !== 'confirmation' && (
         <div className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="max-w-2xl mx-auto flex gap-2">
-            {steps.map((s, i) => (
-              <div key={s} className="flex items-center gap-2 flex-1">
-                <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-medium
+          <div className="max-w-2xl mx-auto flex gap-1">
+            {progressSteps.map((s, i) => (
+              <div key={s} className="flex items-center gap-1 flex-1">
+                <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-medium shrink-0
                   ${i < currentIdx ? 'bg-green-500 text-white'
                     : i === currentIdx ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-400'}`}>
+                    : 'bg-gray-200 text-gray-400'}`}
+                >
                   {i < currentIdx ? '✓' : i + 1}
                 </div>
-                <span className={`text-sm hidden sm:block ${i === currentIdx ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>
+                <span className={`text-xs hidden sm:block truncate ${i === currentIdx ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>
                   {STEP_LABELS[s]}
                 </span>
-                {i < steps.length - 1 && <div className="flex-1 h-px bg-gray-200" />}
+                {i < progressSteps.length - 1 && <div className="flex-1 h-px bg-gray-200 ml-1" />}
               </div>
             ))}
           </div>
@@ -145,18 +151,26 @@ export function BookingPage() {
 
       {/* Step content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
+        {state.step === 'staff' && (
+          <StepStaff
+            staff={business.staff}
+            onSelect={staff => dispatch({ type: 'SELECT_STAFF', staff })}
+          />
+        )}
         {state.step === 'service' && (
           <StepService
             services={business.services}
+            selectedStaff={state.staff}
             onSelect={service => dispatch({ type: 'SELECT_SERVICE', service })}
+            onBack={() => dispatch({ type: 'BACK' })}
           />
         )}
         {state.step === 'slot' && state.service && (
           <StepSlot
             business={business}
             service={state.service}
-            onSelect={(staff, startTime, endTime) =>
-              dispatch({ type: 'SELECT_SLOT', staff, startTime, endTime })}
+            staff={state.staff}
+            onSelect={(startTime, endTime) => dispatch({ type: 'SELECT_SLOT', startTime, endTime })}
             onBack={() => dispatch({ type: 'BACK' })}
           />
         )}
@@ -168,7 +182,7 @@ export function BookingPage() {
             onBack={() => dispatch({ type: 'BACK' })}
           />
         )}
-        {state.step === 'payment' && state.service && state.staff && state.startTime && (
+        {state.step === 'payment' && state.service && state.startTime && (
           <StepPayment
             state={state}
             business={business}

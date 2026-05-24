@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { availabilityApi, type BusinessPublicResponse, type ServiceItem, type StaffItem, type TimeSlot } from '../../api'
+// StaffItem used in Props
 
 interface Props {
   business: BusinessPublicResponse
   service: ServiceItem
-  onSelect: (staff: StaffItem, startTime: string, endTime: string) => void
+  staff: StaffItem | null
+  onSelect: (startTime: string, endTime: string) => void
   onBack: () => void
 }
 
@@ -24,25 +26,22 @@ function formatMonthLabel(year: number, month: number) {
   return new Date(year, month - 1, 1).toLocaleDateString('de-CH', { month: 'long', year: 'numeric' })
 }
 
-export function StepSlot({ business, service, onSelect, onBack }: Props) {
+export function StepSlot({ business, service, staff, onSelect, onBack }: Props) {
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [selectedStaff, setSelectedStaff] = useState<StaffItem | null>(
-    business.staff.length === 1 ? business.staff[0] : null
-  )
 
   // Fetch which days in the visible month have slots
   const { data: availableDates = [], isLoading: loadingDates } = useQuery({
-    queryKey: ['available-dates', business.id, selectedStaff?.id, service.id, viewYear, viewMonth],
+    queryKey: ['available-dates', business.id, staff?.id, service.id, viewYear, viewMonth],
     queryFn: () =>
       availabilityApi.getAvailableDates({
         businessId: business.id,
         serviceId: service.id,
         year: viewYear,
         month: viewMonth,
-        staffId: selectedStaff?.id,
+        staffId: staff?.id,
       }),
   })
 
@@ -50,13 +49,13 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
 
   // Fetch time slots for the selected day
   const { data: slots = [], isLoading: loadingSlots } = useQuery({
-    queryKey: ['slots', business.id, selectedStaff?.id, service.id, selectedDate],
+    queryKey: ['slots', business.id, staff?.id, service.id, selectedDate],
     queryFn: () =>
       availabilityApi.getSlots({
         businessId: business.id,
         serviceId: service.id,
         date: selectedDate!,
-        staffId: selectedStaff?.id,
+        staffId: staff?.id,
       }),
     enabled: !!selectedDate,
   })
@@ -215,19 +214,16 @@ export function StepSlot({ business, service, onSelect, onBack }: Props) {
           )}
           {!loadingSlots && slots.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {slots.map((slot: TimeSlot) => {
-                const staff = selectedStaff ?? business.staff[0]
-                return (
-                  <button
-                    key={slot.start}
-                    onClick={() => onSelect(staff, slot.start, slot.end)}
-                    className="border border-green-200 bg-green-50 rounded-lg py-2 text-sm font-medium
-                      text-green-700 hover:bg-green-100 hover:border-green-400 transition-colors"
-                  >
-                    {formatTime(slot.start)}
-                  </button>
-                )
-              })}
+              {slots.map((slot: TimeSlot) => (
+                <button
+                  key={slot.start}
+                  onClick={() => onSelect(slot.start, slot.end)}
+                  className="border border-green-200 bg-green-50 rounded-lg py-2 text-sm font-medium
+                    text-green-700 hover:bg-green-100 hover:border-green-400 transition-colors"
+                >
+                  {formatTime(slot.start)}
+                </button>
+              ))}
             </div>
           )}
         </div>

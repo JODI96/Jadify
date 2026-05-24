@@ -8,7 +8,7 @@ public record TimeSlot(DateTime Start, DateTime End);
 
 public record CreateBookingRequest(
     Guid    BusinessId,
-    Guid    StaffId,
+    Guid?   StaffId,      // null = pick any available staff
     Guid    ServiceId,
     DateTime StartTime,
     string  CustomerName,

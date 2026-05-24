@@ -32,7 +32,7 @@ export function StepPayment(props: Props) {
     bookingApi
       .create({
         businessId: props.business.id,
-        staffId: props.state.staff!.id,
+        staffId: props.state.staff?.id,
         serviceId: props.state.service!.id,
         startTime: props.state.startTime!,
         customerName: props.state.customerName,

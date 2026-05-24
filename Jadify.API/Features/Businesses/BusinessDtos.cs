@@ -25,7 +25,7 @@ public record BusinessHoursDto(
     bool      IsClosed
 );
 
-public record StaffSummaryDto(Guid Id, string Name, string? AvatarUrl);
+public record StaffSummaryDto(Guid Id, string Name, string? AvatarUrl, IReadOnlyList<Guid> ServiceIds);
 
 public record ServiceSummaryDto(
     Guid    Id,

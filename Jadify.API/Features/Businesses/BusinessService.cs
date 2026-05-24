@@ -22,6 +22,7 @@ public class BusinessService(
         var business = await db.Businesses
             .Include(b => b.BusinessHours)
             .Include(b => b.Staff.Where(s => s.IsActive))
+                .ThenInclude(s => s.StaffServices)
             .Include(b => b.Services.Where(s => s.IsActive))
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Slug == slug && b.IsActive, ct)
@@ -45,6 +46,7 @@ public class BusinessService(
 
         await db.Entry(business).Collection(b => b.BusinessHours).LoadAsync(ct);
         await db.Entry(business).Collection(b => b.Staff).Query()
+            .Include(s => s.StaffServices)
             .Where(s => s.IsActive).LoadAsync(ct);
         await db.Entry(business).Collection(b => b.Services).Query()
             .Where(s => s.IsActive).LoadAsync(ct);
@@ -130,7 +132,8 @@ public class BusinessService(
             b.Email,
             b.LogoUrl,
             b.BusinessHours.OrderBy(h => h.DayOfWeek).Select(ToHoursDto).ToList(),
-            b.Staff.Select(s => new StaffSummaryDto(s.Id, s.Name, s.AvatarUrl)).ToList(),
+            b.Staff.Select(s => new StaffSummaryDto(s.Id, s.Name, s.AvatarUrl,
+                s.StaffServices.Select(ss => ss.ServiceId).ToList())).ToList(),
             b.Services.Select(s => new ServiceSummaryDto(
                 s.Id, s.Name, s.Description, s.DurationMinutes, s.Price)).ToList()
         );

@@ -23,11 +23,6 @@ public class BookingService(
             .FirstOrDefaultAsync(s => s.Id == request.ServiceId && s.BusinessId == request.BusinessId && s.IsActive, ct)
             ?? throw new KeyNotFoundException($"Service {request.ServiceId} not found");
 
-        var staff = await db.Staff
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == request.StaffId && s.BusinessId == request.BusinessId && s.IsActive, ct)
-            ?? throw new KeyNotFoundException($"Staff member {request.StaffId} not found");
-
         var business = await db.Businesses
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Id == request.BusinessId && b.IsActive, ct)
@@ -38,14 +33,39 @@ public class BookingService(
         // 2. Guard against concurrent double-booking (check overlap inside transaction)
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
-        var conflict = await db.Bookings.AnyAsync(b =>
-            b.StaffId == request.StaffId
-         && b.Status  != BookingStatus.Cancelled
-         && b.StartTime < endTime
-         && b.EndTime   > request.StartTime, ct);
+        Jadify.API.Shared.Models.Staff staff;
+        if (request.StaffId.HasValue)
+        {
+            staff = await db.Staff
+                .FirstOrDefaultAsync(s => s.Id == request.StaffId && s.BusinessId == request.BusinessId && s.IsActive, ct)
+                ?? throw new KeyNotFoundException($"Staff member {request.StaffId} not found");
 
-        if (conflict)
-            throw new InvalidOperationException("This time slot is no longer available");
+            var conflict = await db.Bookings.AnyAsync(b =>
+                b.StaffId == request.StaffId
+             && b.Status  != BookingStatus.Cancelled
+             && b.StartTime < endTime
+             && b.EndTime   > request.StartTime, ct);
+
+            if (conflict)
+                throw new InvalidOperationException("This time slot is no longer available");
+        }
+        else
+        {
+            // Pick any active staff member not booked at this time
+            var busyStaffIds = await db.Bookings
+                .Where(b => b.BusinessId == request.BusinessId
+                         && b.Status != BookingStatus.Cancelled
+                         && b.StartTime < endTime
+                         && b.EndTime   > request.StartTime)
+                .Select(b => b.StaffId)
+                .ToListAsync(ct);
+
+            staff = await db.Staff
+                .FirstOrDefaultAsync(s => s.BusinessId == request.BusinessId
+                                       && s.IsActive
+                                       && !busyStaffIds.Contains(s.Id), ct)
+                ?? throw new InvalidOperationException("No available staff for the requested time slot");
+        }
 
         // 3. Find or create customer (keyed by email)
         var customer = await db.Customers.FirstOrDefaultAsync(c => c.Email == request.CustomerEmail, ct);
@@ -78,7 +98,7 @@ public class BookingService(
         var booking = new Booking
         {
             BusinessId  = request.BusinessId,
-            StaffId     = request.StaffId,
+            StaffId     = staff.Id,
             ServiceId   = request.ServiceId,
             CustomerId  = customer.Id,
             StartTime   = request.StartTime,
