@@ -58,6 +58,19 @@ public class AuthService(
                 Tier       = SubscriptionTier.Free
             });
 
+            // Default opening hours: Mon–Sat 09:00–18:00, Sun closed
+            for (int d = 0; d <= 6; d++)
+            {
+                db.BusinessHours.Add(new BusinessHours
+                {
+                    BusinessId = business.Id,
+                    DayOfWeek  = (DayOfWeek)d,
+                    OpenTime   = new TimeOnly(9, 0),
+                    CloseTime  = new TimeOnly(18, 0),
+                    IsClosed   = d == 0,
+                });
+            }
+
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
 

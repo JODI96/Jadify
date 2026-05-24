@@ -30,22 +30,28 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             return [];
 
         // 3. Resolve which staff members are relevant
-        IEnumerable<Guid> relevantStaffIds;
+        List<Guid> staffIdList;
         if (staffId.HasValue)
         {
-            relevantStaffIds = [staffId.Value];
+            staffIdList = [staffId.Value];
         }
         else
         {
-            // Any active staff member who can perform this service
-            relevantStaffIds = await db.StaffServices
+            // Prefer staff explicitly linked to this service; fall back to all active staff
+            staffIdList = await db.StaffServices
                 .AsNoTracking()
                 .Where(ss => ss.ServiceId == serviceId && ss.Staff.BusinessId == businessId && ss.Staff.IsActive)
                 .Select(ss => ss.StaffId)
                 .ToListAsync(ct);
+
+            if (staffIdList.Count == 0)
+                staffIdList = await db.Staff
+                    .AsNoTracking()
+                    .Where(s => s.BusinessId == businessId && s.IsActive)
+                    .Select(s => s.Id)
+                    .ToListAsync(ct);
         }
 
-        var staffIdList = relevantStaffIds.ToList();
         if (staffIdList.Count == 0)
             return [];
 
@@ -105,21 +111,27 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             .Where(h => h.BusinessId == businessId)
             .ToListAsync(ct);
 
-        IEnumerable<Guid> staffIdEnumerable;
+        List<Guid> staffIds;
         if (staffId.HasValue)
         {
-            staffIdEnumerable = [staffId.Value];
+            staffIds = [staffId.Value];
         }
         else
         {
-            staffIdEnumerable = await db.StaffServices
+            staffIds = await db.StaffServices
                 .AsNoTracking()
                 .Where(ss => ss.ServiceId == serviceId && ss.Staff.BusinessId == businessId && ss.Staff.IsActive)
                 .Select(ss => ss.StaffId)
                 .ToListAsync(ct);
+
+            if (staffIds.Count == 0)
+                staffIds = await db.Staff
+                    .AsNoTracking()
+                    .Where(s => s.BusinessId == businessId && s.IsActive)
+                    .Select(s => s.Id)
+                    .ToListAsync(ct);
         }
 
-        var staffIds = staffIdEnumerable.ToList();
         if (staffIds.Count == 0) return [];
 
         var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
