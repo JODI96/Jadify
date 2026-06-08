@@ -20,6 +20,7 @@ public class Business
     public string? LogoUrl { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int ReminderHoursBefore { get; set; } = 24;
 
     public ICollection<BusinessHours> BusinessHours { get; set; } = new List<BusinessHours>();
     public ICollection<Staff> Staff { get; set; } = new List<Staff>();

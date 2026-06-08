@@ -10,6 +10,7 @@ export interface BusinessPublicResponse {
   hours: BusinessHoursItem[]
   staff: StaffItem[]
   services: ServiceItem[]
+  reminderHoursBefore: number
 }
 
 export interface BusinessHoursItem {
@@ -165,6 +166,7 @@ export interface UpdateBusinessRequest {
   address: string
   phone: string
   email: string
+  reminderHoursBefore: number
 }
 
 export interface SetBusinessHoursRequest {

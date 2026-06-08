@@ -143,6 +143,8 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
             e.HasIndex(b => new { b.BusinessId, b.StartTime });
             // Secondary: per-staff slot conflict detection
             e.HasIndex(b => new { b.StaffId, b.StartTime });
+            // Reminder background job: find upcoming bookings that haven't been reminded yet
+            e.HasIndex(b => new { b.StartTime, b.ReminderSentAt });
         });
     }
 

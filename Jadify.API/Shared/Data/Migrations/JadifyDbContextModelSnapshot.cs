@@ -47,6 +47,9 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uuid");
 
@@ -77,6 +80,8 @@ namespace Jadify.API.Shared.Data.Migrations
 
                     b.HasIndex("StaffId", "StartTime");
 
+                    b.HasIndex("StartTime", "ReminderSentAt");
+
                     b.ToTable("Bookings");
                 });
 
@@ -92,6 +97,10 @@ namespace Jadify.API.Shared.Data.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ReminderHoursBefore")
+                        .HasDefaultValue(24)
+                        .HasColumnType("integer");
 
                     b.Property<string>("Email")
                         .IsRequired()

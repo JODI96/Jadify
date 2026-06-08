@@ -15,7 +15,8 @@ public record BusinessPublicResponse(
     string? LogoUrl,
     IReadOnlyList<BusinessHoursDto>  Hours,
     IReadOnlyList<StaffSummaryDto>   Staff,
-    IReadOnlyList<ServiceSummaryDto> Services
+    IReadOnlyList<ServiceSummaryDto> Services,
+    int     ReminderHoursBefore
 );
 
 public record BusinessHoursDto(
@@ -42,7 +43,8 @@ public record UpdateBusinessRequest(
     BusinessType Type,
     string       Address,
     string       Phone,
-    string       Email
+    string       Email,
+    int          ReminderHoursBefore = 24
 );
 
 // ── Opening hours ─────────────────────────────────────────────────────────────

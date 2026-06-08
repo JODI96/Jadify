@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../store/authStore'
 import { businessApi, serviceOwnerApi, staffOwnerApi } from '../../api'
@@ -56,8 +56,21 @@ function ProfileTab() {
     enabled: !!businessId,
   })
 
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', type: 'Salon' })
+  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', type: 'Salon', reminderHoursBefore: 24 })
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (business) {
+      setForm({
+        name: business.name ?? '',
+        address: business.address ?? '',
+        phone: business.phone ?? '',
+        email: business.email ?? '',
+        type: business.type ?? 'Salon',
+        reminderHoursBefore: business.reminderHoursBefore ?? 24,
+      })
+    }
+  }, [business?.id])
 
   const mutation = useMutation({
     mutationFn: () => businessApi.update(businessId!, form),
@@ -88,15 +101,34 @@ function ProfileTab() {
             value={form[key]}
             onChange={e => f(key, e.target.value)}
             placeholder={business?.[key] ?? ''}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
         </div>
       ))}
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Erinnerungs-E-Mail senden
+        </label>
+        <select
+          value={form.reminderHoursBefore}
+          onChange={e => setForm(prev => ({ ...prev, reminderHoursBefore: +e.target.value }))}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+        >
+          <option value={12}>12 Stunden vorher</option>
+          <option value={24}>24 Stunden vorher</option>
+          <option value={48}>48 Stunden vorher</option>
+          <option value={72}>72 Stunden vorher</option>
+        </select>
+        <p className="mt-1 text-xs text-gray-400">
+          Kunden erhalten automatisch eine Erinnerung vor ihrem Termin.
+        </p>
+      </div>
+
       <button
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors w-fit"
+        className="bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-60 transition-colors w-fit"
       >
         {saved ? 'Gespeichert ✓' : mutation.isPending ? 'Wird gespeichert…' : 'Speichern'}
       </button>
@@ -172,7 +204,7 @@ function ServicesTab() {
               <p className="text-xs text-gray-400">{s.durationMinutes} Min · CHF {s.price.toFixed(2)}</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => openEdit(s)} className="text-xs text-indigo-600 hover:underline">Bearbeiten</button>
+              <button onClick={() => openEdit(s)} className="text-xs text-green-700 hover:underline">Bearbeiten</button>
               <button onClick={() => deleteMutation.mutate(s.id)} className="text-xs text-red-500 hover:underline">Entfernen</button>
             </div>
           </div>
@@ -193,7 +225,7 @@ function ServicesTab() {
       {!showForm && !editItem && (
         <button
           onClick={() => setShowForm(true)}
-          className="text-sm text-indigo-600 hover:underline"
+          className="text-sm text-green-700 hover:underline"
         >
           + Dienstleistung hinzufügen
         </button>
@@ -219,13 +251,13 @@ function ServiceForm({
         placeholder="Name"
         value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
       />
       <input
         placeholder="Beschreibung (optional)"
         value={form.description}
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
       />
       <div className="flex gap-3">
         <input
@@ -233,7 +265,7 @@ function ServiceForm({
           placeholder="Dauer (Min)"
           value={form.durationMinutes}
           onChange={e => setForm(f => ({ ...f, durationMinutes: +e.target.value }))}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
         />
         <input
           type="number"
@@ -241,14 +273,14 @@ function ServiceForm({
           placeholder="Preis (CHF)"
           value={form.price}
           onChange={e => setForm(f => ({ ...f, price: +e.target.value }))}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
         />
       </div>
       <div className="flex gap-2">
         <button
           onClick={onSave}
           disabled={saving}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60"
+          className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 disabled:opacity-60"
         >
           {saving ? 'Wird gespeichert…' : 'Speichern'}
         </button>
@@ -318,7 +350,7 @@ function StaffTab() {
               <p className="text-xs text-gray-400">{s.email}</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => openEdit(s)} className="text-xs text-indigo-600 hover:underline">Bearbeiten</button>
+              <button onClick={() => openEdit(s)} className="text-xs text-green-700 hover:underline">Bearbeiten</button>
               <button onClick={() => deleteMutation.mutate(s.id)} className="text-xs text-red-500 hover:underline">Entfernen</button>
             </div>
           </div>
@@ -334,20 +366,20 @@ function StaffTab() {
             placeholder="Name"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
           <input
             type="email"
             placeholder="E-Mail"
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
           <div className="flex gap-2">
             <button
               onClick={() => editItem ? updateMutation.mutate(editItem) : createMutation.mutate()}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60"
+              className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 disabled:opacity-60"
             >
               {createMutation.isPending || updateMutation.isPending ? 'Wird gespeichert…' : 'Speichern'}
             </button>
@@ -362,7 +394,7 @@ function StaffTab() {
       )}
 
       {!showForm && !editItem && (
-        <button onClick={() => setShowForm(true)} className="text-sm text-indigo-600 hover:underline">
+        <button onClick={() => setShowForm(true)} className="text-sm text-green-700 hover:underline">
           + Mitarbeiter hinzufügen
         </button>
       )}
@@ -417,7 +449,7 @@ function HoursTab() {
               type="checkbox"
               checked={h.isClosed}
               onChange={e => setDay(i, { isClosed: e.target.checked })}
-              className="accent-indigo-600"
+              className="accent-green-700"
             />
             Geschlossen
           </label>
@@ -427,14 +459,14 @@ function HoursTab() {
                 type="time"
                 value={h.openTime}
                 onChange={e => setDay(i, { openTime: e.target.value })}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
               />
               <span className="text-gray-400 text-sm">–</span>
               <input
                 type="time"
                 value={h.closeTime}
                 onChange={e => setDay(i, { closeTime: e.target.value })}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
               />
             </>
           )}
@@ -444,7 +476,7 @@ function HoursTab() {
       <button
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="mt-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+        className="mt-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-60 transition-colors"
       >
         {saved ? 'Gespeichert ✓' : mutation.isPending ? 'Wird gespeichert…' : 'Speichern'}
       </button>

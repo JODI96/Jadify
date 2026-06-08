@@ -134,6 +134,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISubscriptionService, Jadify.API.Features.Subscriptions.SubscriptionService>();
         // Step 10
         services.AddScoped<IDashboardService, DashboardService>();
+
+        // Background services
+        services.AddHostedService<ReminderBackgroundService>();
+
         return services;
     }
 }

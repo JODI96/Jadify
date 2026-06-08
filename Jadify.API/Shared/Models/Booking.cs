@@ -28,6 +28,7 @@ public class Booking
     public string? StripePaymentIntentId { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ReminderSentAt { get; set; }
 
     public Payment? Payment { get; set; }
 }

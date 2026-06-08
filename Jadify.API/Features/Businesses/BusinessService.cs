@@ -36,11 +36,12 @@ public class BusinessService(
     {
         var business = await GetOwnedAsync(id, ownerId, ct);
 
-        business.Name    = request.Name;
-        business.Type    = request.Type;
-        business.Address = request.Address;
-        business.Phone   = request.Phone;
-        business.Email   = request.Email;
+        business.Name                = request.Name;
+        business.Type                = request.Type;
+        business.Address             = request.Address;
+        business.Phone               = request.Phone;
+        business.Email               = request.Email;
+        business.ReminderHoursBefore = Math.Clamp(request.ReminderHoursBefore, 1, 168);
 
         await db.SaveChangesAsync(ct);
 
@@ -146,7 +147,8 @@ public class BusinessService(
             b.Staff.Select(s => new StaffSummaryDto(s.Id, s.Name, s.AvatarUrl,
                 s.StaffServices.Select(ss => ss.ServiceId).ToList())).ToList(),
             b.Services.Select(s => new ServiceSummaryDto(
-                s.Id, s.Name, s.Description, s.DurationMinutes, s.Price)).ToList()
+                s.Id, s.Name, s.Description, s.DurationMinutes, s.Price)).ToList(),
+            b.ReminderHoursBefore
         );
 
     private static BusinessHoursDto ToHoursDto(BusinessHours h) =>

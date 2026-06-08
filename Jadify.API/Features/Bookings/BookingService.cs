@@ -13,6 +13,7 @@ public class BookingService(
     JadifyDbContext db,
     IStripeClient stripeClient,
     IHostEnvironment env,
+    IEmailService emailService,
     ILogger<BookingService> logger) : IBookingService
 {
     public async Task<CreatePaymentIntentResponse> CreatePaymentIntentAsync(
@@ -171,6 +172,13 @@ public class BookingService(
 
         logger.LogInformation("Booking {BookingId} created (prepaid={Prepaid})", booking.Id, isPrepaid);
 
+        // Send emails — failures must not break the booking response
+        try { await emailService.SendBookingConfirmationAsync(customer.Email, customer.Name, booking.Id, ct); }
+        catch (Exception ex) { logger.LogWarning(ex, "Confirmation email failed for booking {BookingId}", booking.Id); }
+
+        try { await emailService.SendOwnerBookingNotificationAsync(business.Email, business.Name, booking.Id, ct); }
+        catch (Exception ex) { logger.LogWarning(ex, "Owner notification failed for booking {BookingId}", booking.Id); }
+
         return ToResponse(booking, business.Name, staff.Name, service.Name,
             customer.Name, customer.Email, null);
     }
@@ -227,6 +235,10 @@ public class BookingService(
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Booking {BookingId} cancelled", bookingId);
+
+        try { await emailService.SendBookingCancellationAsync(booking.Customer.Email, booking.Customer.Name, booking.Id, ct); }
+        catch (Exception ex) { logger.LogWarning(ex, "Cancellation email failed for booking {BookingId}", bookingId); }
+
         return ToResponse(booking, clientSecret: null);
     }
 

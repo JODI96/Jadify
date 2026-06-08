@@ -12,4 +12,13 @@ public class NullEmailService : IEmailService
 
     public Task SendBookingCancellationAsync(string toEmail, string toName, Guid bookingId, CancellationToken ct = default)
         => Task.CompletedTask;
+
+    public Task SendOwnerBookingNotificationAsync(string ownerEmail, string ownerName, Guid bookingId, CancellationToken ct = default)
+        => Task.CompletedTask;
+
+    public Task SendBookingReminderAsync(string toEmail, string toName, Guid bookingId, CancellationToken ct = default)
+        => Task.CompletedTask;
+
+    public Task SendPasswordResetAsync(string toEmail, string resetUrl, CancellationToken ct = default)
+        => Task.CompletedTask;
 }

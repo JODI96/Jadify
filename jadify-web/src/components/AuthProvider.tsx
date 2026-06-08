@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { AuthContext, loadAuthState, type AuthState } from '../store/authStore'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('jadify_slug')
     setState({ token: null, refreshToken: null, businessId: null, email: null, businessType: null, slug: null })
   }
+
+  // Auto-logout when the API client detects an expired/invalid token
+  useEffect(() => {
+    function handleForceLogout() {
+      logout()
+      window.location.replace('/login')
+    }
+    window.addEventListener('jadify:logout', handleForceLogout)
+    return () => window.removeEventListener('jadify:logout', handleForceLogout)
+  }, [])
 
   return (
     <AuthContext.Provider value={{ ...state, login, logout }}>
