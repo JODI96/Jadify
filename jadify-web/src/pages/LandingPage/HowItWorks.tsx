@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+﻿import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 
 const EASE = [0.21, 0.47, 0.32, 0.98] as const
@@ -8,25 +8,25 @@ const STEPS = [
     n: '01',
     title: 'Unternehmen einrichten',
     body: 'Name, Dienstleistungen, Preise, Öffnungszeiten und Team — einmal eintragen, fertig. Dauert weniger als 5 Minuten.',
-    accent: 'text-indigo-400',
-    border: 'border-indigo-500/20',
-    glyph: 'bg-indigo-500/10 text-indigo-400',
+    accent: 'text-green-400',
+    border: 'border-green-500/20',
+    glyph: 'bg-green-500/10 text-green-400',
   },
   {
     n: '02',
     title: 'Link teilen',
     body: 'Du erhältst eine persönliche URL. Teile sie auf Instagram, in der Bio, auf Google My Business oder auf deiner Website.',
-    accent: 'text-violet-400',
-    border: 'border-violet-500/20',
-    glyph: 'bg-violet-500/10 text-violet-400',
+    accent: 'text-green-400',
+    border: 'border-green-500/20',
+    glyph: 'bg-green-500/10 text-green-400',
   },
   {
     n: '03',
     title: 'Kunden buchen & zahlen',
     body: 'Kunden buchen selbst und bezahlen direkt über Stripe — du wirst benachrichtigt und siehst alles im Dashboard.',
-    accent: 'text-purple-400',
-    border: 'border-purple-500/20',
-    glyph: 'bg-purple-500/10 text-purple-400',
+    accent: 'text-green-400',
+    border: 'border-green-500/20',
+    glyph: 'bg-green-500/10 text-green-400',
   },
 ]
 
@@ -63,7 +63,7 @@ export function HowItWorks() {
           transition={{ duration: 0.6, ease: EASE }}
           className="mb-20"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-400 mb-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-green-400 mb-3">
             So funktioniert's
           </p>
           <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">

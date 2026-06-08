@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { bookingApi, type BookingResponse } from '../../api'
 
 function formatDate(iso: string) {
@@ -59,7 +60,7 @@ export function PaymentCompletePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-gray-500">Buchung wird gespeichert…</p>
         </div>
       </div>
@@ -80,7 +81,7 @@ export function PaymentCompletePage() {
           <p className="text-xs text-gray-400 mb-6">Die Zahlung wurde bereits verarbeitet. Bitte kontaktiere uns direkt.</p>
           <a
             href={`/book/${slug}`}
-            className="inline-block text-sm text-indigo-600 hover:underline"
+            className="inline-block text-sm text-green-700 hover:underline"
           >
             Zurück zur Buchung
           </a>
@@ -104,27 +105,44 @@ export function PaymentCompletePage() {
         <div className="w-full max-w-md">
 
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print-card">
+          <motion.div
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print-card"
+          >
 
             {/* Green header */}
-            <div className="bg-green-500 px-8 py-8 text-center">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-bold text-white">Buchung bestätigt!</h1>
+            <div className="bg-green-500 px-6 py-7 sm:px-8 sm:py-8 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring', stiffness: 300, damping: 20 }}
+                className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3"
+              >
+                <motion.svg
+                  className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5, ease: 'easeOut' }}
+                >
+                  <motion.path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5, ease: 'easeOut' }}
+                  />
+                </motion.svg>
+              </motion.div>
+              <h1 className="text-2xl font-black text-white">Buchung bestätigt!</h1>
               <p className="text-green-100 text-sm mt-1">Zahlung erfolgreich verarbeitet</p>
             </div>
 
             {/* Body */}
             {booking && (
-              <div className="px-8 py-6 space-y-4">
+              <div className="px-5 py-5 sm:px-8 sm:py-6 space-y-4">
 
                 {/* Service + Staff */}
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
@@ -139,8 +157,8 @@ export function PaymentCompletePage() {
 
                 {/* Date */}
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -154,8 +172,8 @@ export function PaymentCompletePage() {
 
                 {/* Customer */}
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -183,7 +201,7 @@ export function PaymentCompletePage() {
             )}
 
             {/* Footer */}
-            <div className="px-8 pb-8 pt-2 flex flex-col gap-2 no-print">
+            <div className="px-5 pb-6 pt-2 sm:px-8 sm:pb-8 flex flex-col gap-2 no-print">
               <button
                 onClick={() => window.print()}
                 className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
@@ -195,12 +213,12 @@ export function PaymentCompletePage() {
               </button>
               <a
                 href={`/book/${slug}`}
-                className="w-full flex items-center justify-center bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+                className="w-full flex items-center justify-center bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 transition-colors"
               >
                 Neue Buchung
               </a>
             </div>
-          </div>
+          </motion.div>
 
           <p className="text-center text-xs text-gray-400 mt-4 no-print">
             Eine Bestätigung wurde an {booking?.customerEmail} gesendet.

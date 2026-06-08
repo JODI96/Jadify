@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { Hero } from './Hero'
+import { Marquee } from './Marquee'
 import { Features } from './Features'
 import { HowItWorks } from './HowItWorks'
 import { Pricing } from './Pricing'
@@ -14,6 +15,7 @@ export function LandingPage() {
     <div className="bg-white text-gray-900 overflow-x-hidden">
       <Navbar />
       <Hero />
+      <Marquee />
       <Features />
       <HowItWorks />
       <Pricing />

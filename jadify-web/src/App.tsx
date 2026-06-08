@@ -5,8 +5,11 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { BookingPage } from './pages/BookingPage'
 import { PaymentCompletePage } from './pages/BookingPage/PaymentCompletePage'
+import { ConfirmationPage } from './pages/BookingPage/ConfirmationPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { DashboardLayout } from './pages/Dashboard/DashboardLayout'
 import { DASHBOARD_MODULES } from './dashboard/registry'
 
@@ -24,8 +27,11 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/book/:slug/payment-complete" element={<PaymentCompletePage />} />
+            <Route path="/book/:slug/confirmation/:bookingId" element={<ConfirmationPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Owner dashboard — protected */}
             <Route

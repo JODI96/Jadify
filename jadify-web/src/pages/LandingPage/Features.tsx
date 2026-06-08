@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+﻿import { useRef, useState, useEffect } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 
 const EASE = [0.21, 0.47, 0.32, 0.98] as const
@@ -34,6 +34,7 @@ function Card({
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
+      whileHover={typeof window !== 'undefined' && window.innerWidth >= 768 ? { y: -4, transition: { duration: 0.2 } } : {}}
       transition={{ duration: 0.65, delay, ease: EASE }}
       className={className}
     >
@@ -70,7 +71,7 @@ function BookingCard() {
   return (
     <div ref={ref} className="relative bg-white h-full rounded-3xl p-7 flex flex-col">
       <div className="mb-5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
+        <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-green-700">
           Buchungsseite
         </span>
         <h3 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight mt-1.5">
@@ -83,7 +84,7 @@ function BookingCard() {
 
       <div className="bg-gray-50 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-[10px] font-bold shadow-md">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center text-white text-[10px] font-bold shadow-md">
             S
           </div>
           <div>
@@ -116,7 +117,7 @@ function BookingCard() {
         </div>
 
         <div className="mt-3 text-[10px] text-gray-400 font-mono">
-          jadify.ch/book/<span className="text-indigo-500 font-medium">salon-bella</span>
+          jadify.ch/book/<span className="text-green-600 font-medium">salon-bella</span>
         </div>
       </div>
 
@@ -129,7 +130,7 @@ function BookingCard() {
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
             className="absolute top-5 right-5 bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/30 flex items-center gap-3"
           >
-            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-900/40">
+            <div className="w-8 h-8 bg-green-700 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-green-900/40">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -248,15 +249,15 @@ function DashCard() {
           </div>
         </div>
 
-        <div className="col-span-2 bg-indigo-500/[0.08] border border-indigo-500/[0.15] rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-600/30 flex items-center justify-center shrink-0">
-            <span className="text-indigo-300 text-sm font-bold">A</span>
+        <div className="col-span-2 bg-green-600/[0.08] border border-green-500/[0.15] rounded-2xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-green-700/30 flex items-center justify-center shrink-0">
+            <span className="text-green-300 text-sm font-bold">A</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-white text-sm font-bold">Anna M.</div>
             <div className="text-white/30 text-xs">Nächste Buchung · 14:00 · Haarschnitt</div>
           </div>
-          <div className="shrink-0 bg-indigo-600/20 border border-indigo-500/20 rounded-lg px-2.5 py-1.5 text-indigo-300 text-[10px] font-semibold">
+          <div className="shrink-0 bg-green-700/20 border border-green-500/20 rounded-lg px-2.5 py-1.5 text-green-300 text-[10px] font-semibold">
             14:00
           </div>
         </div>
@@ -294,18 +295,18 @@ function CounterCard() {
   }, [inView])
 
   return (
-    <div ref={ref} className="bg-indigo-600 rounded-3xl p-5 flex flex-col justify-between overflow-hidden relative flex-1 min-h-[140px]">
+    <div ref={ref} className="bg-green-700 rounded-3xl p-5 flex flex-col justify-between overflow-hidden relative flex-1 min-h-[140px]">
       <div className="absolute bottom-0 right-2 text-[72px] font-black text-white/[0.12] select-none leading-none pointer-events-none">
         ∞
       </div>
-      <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-200">
+      <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-green-200">
         Buchungen
       </span>
       <div>
         <div className="text-4xl font-black text-white leading-none tabular-nums">
           {count.toLocaleString('de-CH')}+
         </div>
-        <p className="text-indigo-200/60 text-xs mt-1.5">verarbeitet</p>
+        <p className="text-green-200/60 text-xs mt-1.5">verarbeitet</p>
       </div>
     </div>
   )
@@ -317,7 +318,7 @@ export function Features() {
     <section id="features" className="py-28 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <Card className="mb-10" delay={0}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600 mb-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-green-700 mb-3">
             Funktionen
           </p>
           <h2 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">

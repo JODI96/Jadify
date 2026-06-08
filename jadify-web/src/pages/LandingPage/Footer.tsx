@@ -66,7 +66,7 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <p className="text-xs text-white/20">
               Zahlungen gesichert durch{' '}
-              <span className="text-indigo-400 font-medium">Stripe</span>
+              <span className="text-green-400 font-medium">Stripe</span>
             </p>
             <div className="w-px h-3 bg-white/10" />
             <p className="text-xs text-white/20">SOC 2 · PCI DSS</p>

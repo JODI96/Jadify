@@ -24,4 +24,22 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<ActionResult<AuthResponse>> Refresh(
         RefreshRequest request, CancellationToken ct)
         => Ok(await authService.RefreshAsync(request.RefreshToken, ct));
+
+    /// <summary>Sends a password reset email. Always returns 200 to prevent email enumeration.</summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+        ForgotPasswordRequest request, CancellationToken ct)
+    {
+        await authService.ForgotPasswordAsync(request.Email, ct);
+        return Ok(new { message = "Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link gesendet." });
+    }
+
+    /// <summary>Resets the password using the token from the email link.</summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        ResetPasswordRequest request, CancellationToken ct)
+    {
+        await authService.ResetPasswordAsync(request.Email, request.Token, request.NewPassword, ct);
+        return Ok(new { message = "Passwort erfolgreich zurückgesetzt." });
+    }
 }

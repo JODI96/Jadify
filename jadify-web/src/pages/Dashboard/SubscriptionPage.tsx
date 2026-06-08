@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { subscriptionApi, type SubscriptionResponse } from '../../api'
 import { useAuth } from '../../store/authStore'
@@ -81,11 +81,11 @@ export function SubscriptionPage() {
 
       {/* Current status */}
       {sub && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center justify-between text-sm">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center justify-between text-sm">
           <div>
-            <span className="text-indigo-600 font-medium">Aktueller Plan: {sub.tier}</span>
+            <span className="text-green-700 font-medium">Aktueller Plan: {sub.tier}</span>
             {sub.currentPeriodEnd && (
-              <span className="text-indigo-500 ml-3">· Verlängert sich am {formatDate(sub.currentPeriodEnd)}</span>
+              <span className="text-green-600 ml-3">· Verlängert sich am {formatDate(sub.currentPeriodEnd)}</span>
             )}
             {sub.cancelAtPeriodEnd && (
               <span className="text-red-500 ml-3">· Endet am {formatDate(sub.currentPeriodEnd)}</span>
@@ -119,10 +119,10 @@ export function SubscriptionPage() {
             <div
               key={tier.name}
               className={`bg-white border rounded-xl p-5 flex flex-col
-                ${isCurrent ? 'border-indigo-400 ring-1 ring-indigo-300' : tier.highlight ? 'border-indigo-200' : 'border-gray-200'}`}
+                ${isCurrent ? 'border-green-500 ring-1 ring-green-300' : tier.highlight ? 'border-green-200' : 'border-gray-200'}`}
             >
               {tier.highlight && (
-                <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-2">
+                <span className="text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full self-start mb-2">
                   Beliebt
                 </span>
               )}
@@ -140,7 +140,7 @@ export function SubscriptionPage() {
               </ul>
 
               {isCurrent ? (
-                <div className="w-full py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium text-center">
+                <div className="w-full py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium text-center">
                   Aktueller Plan
                 </div>
               ) : tier.name === 'Free' ? (
@@ -153,7 +153,7 @@ export function SubscriptionPage() {
                   onClick={() =>
                     isPaid ? changeTier.mutate(tier.name) : createSub.mutate(tier.name)
                   }
-                  className="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  className="w-full py-2 rounded-lg bg-green-700 text-white text-sm font-medium hover:bg-green-800 disabled:opacity-50 transition-colors"
                 >
                   {busy ? 'Wird verarbeitet…' : isPaid ? 'Wechseln' : 'Upgraden'}
                 </button>

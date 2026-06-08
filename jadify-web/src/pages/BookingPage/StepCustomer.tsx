@@ -35,77 +35,57 @@ export function StepCustomer({ state, onSubmit, onBack }: Props) {
     onSubmit(name, email, phone, notes)
   }
 
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-gray-900 transition-colors'
+
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Ihre Angaben</h2>
+      <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-1">Ihre Angaben</h2>
 
       {/* Summary */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-6 text-sm text-indigo-800">
-        <p className="font-medium">{state.service?.name}</p>
-        <p className="text-indigo-600">
-          {state.startTime && formatDateTime(state.startTime)} · {state.staff?.name}
+      <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 mb-6 text-sm">
+        <p className="font-semibold text-gray-900">{state.service?.name}</p>
+        <p className="text-gray-500 mt-0.5">
+          {state.startTime && formatDateTime(state.startTime)}
+          {state.staff?.name && ` · ${state.staff.name}`}
+          {' · '}CHF {state.service?.price.toFixed(2)}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Vollständiger Name *</label>
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Anna Müller"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Vollständiger Name *</label>
+          <input value={name} onChange={e => setName(e.target.value)}
+            className={inputCls} placeholder="Anna Müller" />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="anna@example.com"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">E-Mail *</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+            className={inputCls} placeholder="anna@example.com" />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="+41 79 123 45 67"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefon</label>
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+            className={inputCls} placeholder="+41 79 123 45 67" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bemerkungen</label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-            placeholder="Wünsche oder Hinweise…"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Bemerkungen</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+            className={`${inputCls} resize-none`} placeholder="Wünsche oder Hinweise…" />
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
+          <button type="button" onClick={onBack}
+            className="text-sm text-gray-400 hover:text-gray-700 transition-colors">
             ← Zurück
           </button>
-          <button
-            type="submit"
-            className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
-          >
-            Weiter zur Zahlung
+          <button type="submit"
+            className="flex-1 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
+            Weiter zur Zahlung →
           </button>
         </div>
       </form>

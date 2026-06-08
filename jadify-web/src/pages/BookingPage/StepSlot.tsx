@@ -89,7 +89,7 @@ export function StepSlot({ business, service, staff, onSelect, onBack }: Props) 
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Datum & Zeit wählen</h2>
+      <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-1">Datum & Zeit wählen</h2>
       <p className="text-sm text-gray-500 mb-4">
         {service.name} · {service.durationMinutes} min · CHF {service.price.toFixed(2)}
       </p>
@@ -136,13 +136,13 @@ export function StepSlot({ business, service, staff, onSelect, onBack }: Props) 
             let cls = 'relative mx-auto flex items-center justify-center w-9 h-9 rounded-full text-sm font-medium transition-colors select-none '
 
             if (isSelected) {
-              cls += 'bg-indigo-600 text-white'
+              cls += 'bg-gray-900 text-white'
             } else if (isPast) {
               cls += 'text-gray-300 cursor-not-allowed'
             } else if (isAvailable) {
-              cls += 'text-green-700 hover:bg-green-50 cursor-pointer'
+              cls += 'text-gray-800 font-semibold hover:bg-gray-100 cursor-pointer'
             } else {
-              cls += 'text-red-400 cursor-not-allowed'
+              cls += 'text-gray-300 cursor-not-allowed'
             }
 
             return (
@@ -154,7 +154,7 @@ export function StepSlot({ business, service, staff, onSelect, onBack }: Props) 
                 >
                   {day}
                   {isToday && !isSelected && (
-                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-400" />
+                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-400" />
                   )}
                 </button>
               </div>
@@ -191,8 +191,8 @@ export function StepSlot({ business, service, staff, onSelect, onBack }: Props) 
                 <button
                   key={slot.start}
                   onClick={() => onSelect(slot.start, slot.end)}
-                  className="border border-green-200 bg-green-50 rounded-lg py-2 text-sm font-medium
-                    text-green-700 hover:bg-green-100 hover:border-green-400 transition-colors"
+                  className="border border-gray-200 bg-white rounded-lg py-3 text-sm font-semibold
+                    text-gray-800 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-colors"
                 >
                   {formatTime(slot.start)}
                 </button>

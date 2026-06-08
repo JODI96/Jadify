@@ -21,8 +21,8 @@ export function Logo({ size = 32, wordmark = true, light = false }: LogoProps) {
       >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#7c3aed" />
+            <stop offset="0%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#15803d" />
           </linearGradient>
         </defs>
         <rect width="100" height="100" rx="24" fill={`url(#${gradId})`} />

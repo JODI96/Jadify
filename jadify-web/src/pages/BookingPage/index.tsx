@@ -1,7 +1,8 @@
 import { useReducer } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { businessApi, type ServiceItem, type StaffItem } from '../../api'
+import { AnimatePresence, motion } from 'framer-motion'
+import { businessApi, type BusinessPublicResponse, type ServiceItem, type StaffItem } from '../../api'
 import { StepStaff } from './StepStaff'
 import { StepService } from './StepService'
 import { StepSlot } from './StepSlot'
@@ -81,6 +82,69 @@ const STEP_LABELS: Record<Exclude<BookingStep, 'confirmation'>, string> = {
 
 const progressSteps = stepOrder.filter(s => s !== 'confirmation') as Array<Exclude<BookingStep, 'confirmation'>>
 
+function StepContent({
+  state,
+  dispatch,
+  business,
+}: {
+  state: BookingState
+  dispatch: React.Dispatch<BookingAction>
+  business: BusinessPublicResponse
+}) {
+  switch (state.step) {
+    case 'staff':
+      return (
+        <StepStaff
+          staff={business.staff}
+          onSelect={staff => dispatch({ type: 'SELECT_STAFF', staff })}
+        />
+      )
+    case 'service':
+      return (
+        <StepService
+          services={business.services}
+          selectedStaff={state.staff}
+          onSelect={service => dispatch({ type: 'SELECT_SERVICE', service })}
+          onBack={() => dispatch({ type: 'BACK' })}
+        />
+      )
+    case 'slot':
+      return state.service ? (
+        <StepSlot
+          business={business}
+          service={state.service}
+          staff={state.staff}
+          onSelect={(startTime, endTime) => dispatch({ type: 'SELECT_SLOT', startTime, endTime })}
+          onBack={() => dispatch({ type: 'BACK' })}
+        />
+      ) : null
+    case 'customer':
+      return (
+        <StepCustomer
+          state={state}
+          onSubmit={(name, email, phone, notes) =>
+            dispatch({ type: 'SUBMIT_CUSTOMER', name, email, phone, notes })}
+          onBack={() => dispatch({ type: 'BACK' })}
+        />
+      )
+    case 'payment':
+      return (state.service && state.startTime) ? (
+        <StepPayment
+          state={state}
+          business={business}
+          onBookingCreated={(bookingId, clientSecret) =>
+            dispatch({ type: 'BOOKING_CREATED', bookingId, clientSecret })}
+          onComplete={() => dispatch({ type: 'PAYMENT_COMPLETE' })}
+          onBack={() => dispatch({ type: 'BACK' })}
+        />
+      ) : null
+    case 'confirmation':
+      return <StepConfirmation state={state} business={business} />
+    default:
+      return null
+  }
+}
+
 export function BookingPage() {
   const { slug } = useParams<{ slug: string }>()
   const [state, dispatch] = useReducer(reducer, initial)
@@ -128,73 +192,46 @@ export function BookingPage() {
 
       {/* Progress bar */}
       {state.step !== 'confirmation' && (
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="max-w-2xl mx-auto flex gap-1">
-            {progressSteps.map((s, i) => (
-              <div key={s} className="flex items-center gap-1 flex-1">
-                <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-medium shrink-0
-                  ${i < currentIdx ? 'bg-green-500 text-white'
-                    : i === currentIdx ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-400'}`}
-                >
-                  {i < currentIdx ? '✓' : i + 1}
+        <div className="bg-white border-b border-gray-100 px-4 py-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center">
+              {progressSteps.map((s, i) => (
+                <div key={s} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-2 h-2 rounded-full transition-colors ${
+                      i < currentIdx ? 'bg-gray-900'
+                        : i === currentIdx ? 'bg-gray-900'
+                        : 'bg-gray-200'
+                    }`} />
+                    <span className={`text-xs mt-1.5 font-medium hidden sm:block whitespace-nowrap ${
+                      i === currentIdx ? 'text-gray-900' : i < currentIdx ? 'text-gray-400' : 'text-gray-300'
+                    }`}>
+                      {STEP_LABELS[s]}
+                    </span>
+                  </div>
+                  {i < progressSteps.length - 1 && (
+                    <div className={`flex-1 h-px mx-2 transition-colors ${i < currentIdx ? 'bg-gray-900' : 'bg-gray-200'}`} />
+                  )}
                 </div>
-                <span className={`text-xs hidden sm:block truncate ${i === currentIdx ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>
-                  {STEP_LABELS[s]}
-                </span>
-                {i < progressSteps.length - 1 && <div className="flex-1 h-px bg-gray-200 ml-1" />}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Step content */}
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {state.step === 'staff' && (
-          <StepStaff
-            staff={business.staff}
-            onSelect={staff => dispatch({ type: 'SELECT_STAFF', staff })}
-          />
-        )}
-        {state.step === 'service' && (
-          <StepService
-            services={business.services}
-            selectedStaff={state.staff}
-            onSelect={service => dispatch({ type: 'SELECT_SERVICE', service })}
-            onBack={() => dispatch({ type: 'BACK' })}
-          />
-        )}
-        {state.step === 'slot' && state.service && (
-          <StepSlot
-            business={business}
-            service={state.service}
-            staff={state.staff}
-            onSelect={(startTime, endTime) => dispatch({ type: 'SELECT_SLOT', startTime, endTime })}
-            onBack={() => dispatch({ type: 'BACK' })}
-          />
-        )}
-        {state.step === 'customer' && (
-          <StepCustomer
-            state={state}
-            onSubmit={(name, email, phone, notes) =>
-              dispatch({ type: 'SUBMIT_CUSTOMER', name, email, phone, notes })}
-            onBack={() => dispatch({ type: 'BACK' })}
-          />
-        )}
-        {state.step === 'payment' && state.service && state.startTime && (
-          <StepPayment
-            state={state}
-            business={business}
-            onBookingCreated={(bookingId, clientSecret) =>
-              dispatch({ type: 'BOOKING_CREATED', bookingId, clientSecret })}
-            onComplete={() => dispatch({ type: 'PAYMENT_COMPLETE' })}
-            onBack={() => dispatch({ type: 'BACK' })}
-          />
-        )}
-        {state.step === 'confirmation' && (
-          <StepConfirmation state={state} business={business} />
-        )}
+      <main className="max-w-2xl mx-auto px-4 py-6 overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={state.step}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <StepContent state={state} dispatch={dispatch} business={business} />
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   )

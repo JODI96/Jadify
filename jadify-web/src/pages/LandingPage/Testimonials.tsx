@@ -1,4 +1,4 @@
-import { FadeUp } from './index'
+﻿import { FadeUp } from './index'
 
 const TESTIMONIALS = [
   {
@@ -18,8 +18,8 @@ const TESTIMONIALS = [
     initials: 'LB',
     metric: '+38%',
     metricLabel: 'Umsatz',
-    from: 'from-indigo-500',
-    to: 'to-violet-600',
+    from: 'from-green-500',
+    to: 'to-green-700',
   },
   {
     quote: 'Von Papierkalender auf vollständig digital — an einem Nachmittag. Ich wünschte, ich hätte das früher gemacht.',
@@ -48,14 +48,14 @@ function Stars() {
 export function Testimonials() {
   return (
     <section className="py-32 bg-white relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-indigo-50 rounded-full blur-[120px] opacity-60" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-50 rounded-full blur-[100px] opacity-50" />
+      <div className="absolute inset-0 hidden sm:block">
+        <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-green-50 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-green-50 rounded-full blur-[100px] opacity-50" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         <FadeUp className="text-center mb-20">
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-4">Kundenstimmen</p>
+          <p className="text-sm font-semibold text-green-700 uppercase tracking-widest mb-4">Kundenstimmen</p>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-900">
             Geliebt von Schweizer Unternehmen.
           </h2>

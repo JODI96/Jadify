@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
@@ -47,10 +47,10 @@ function KpiCard({ label, value, sub, subColor = 'text-gray-400' }: {
   label: string; value: string; sub?: string; subColor?: string
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className="text-2xl font-semibold text-gray-900">{value}</p>
-      {sub && <p className={`text-xs mt-1 ${subColor}`}>{sub}</p>}
+    <div className="bg-white border border-gray-100 rounded-xl p-4">
+      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-2 truncate">{label}</p>
+      <p className="text-lg sm:text-2xl font-black text-gray-900 truncate">{value}</p>
+      {sub && <p className={`text-[11px] mt-1 truncate ${subColor}`}>{sub}</p>}
     </div>
   )
 }
@@ -58,7 +58,7 @@ function KpiCard({ label, value, sub, subColor = 'text-gray-400' }: {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function OverviewPage() {
-  const { businessId, businessType, email, slug } = useAuth()
+  const { businessId, businessType, slug } = useAuth()
 
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
@@ -75,43 +75,83 @@ export function OverviewPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Admin-Panel</h1>
-        <span className="text-xs text-gray-400">{email}</span>
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">Übersicht</h1>
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs text-gray-400">Live</span>
+        </div>
       </div>
 
       {/* KPIs */}
       {isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 h-20 animate-pulse" />
+            <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 h-20 animate-pulse" />
           ))}
         </div>
       ) : data ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="Buchungen heute"    value={String(data.todayBookingCount)} />
-          <KpiCard label="Bevorstehend"       value={String(data.upcomingBookingCount)} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <KpiCard label="Heute"        value={String(data.todayBookingCount)}   sub="Buchungen" />
+          <KpiCard label="Bevorstehend" value={String(data.upcomingBookingCount)} sub="Buchungen" />
           <KpiCard
-            label="Umsatz diesen Monat"
-            value={`CHF ${data.revenueThisMonth.toFixed(2)}`}
-            sub={`${growthSign}${data.revenueGrowthPercent}% vs. letzten Monat`}
+            label="Umsatz Mai"
+            value={`CHF ${data.revenueThisMonth.toLocaleString('de-CH', { maximumFractionDigits: 0 })}`}
+            sub={`${growthSign}${data.revenueGrowthPercent}% vs. Vormonat`}
             subColor={growthColor}
           />
-          <KpiCard label="Kunden gesamt"      value={String(data.totalCustomers)} />
+          <KpiCard label="Kunden" value={String(data.totalCustomers)} sub="Gesamt" />
         </div>
       ) : null}
 
       {/* Booking link */}
       {slug && <BookingLinkPanel slug={slug} />}
 
-      {/* Management grid */}
-      <div className={`grid gap-3 md:gap-4 ${isRestaurant ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
+      {/* Mobile: quick-access nav cards */}
+      <div className="md:hidden grid grid-cols-2 gap-2.5">
+        <Link to="/dashboard/dienstleistungen"
+          className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Dienstleistungen</p>
+            <p className="text-sm font-semibold text-gray-900">Verwalten →</p>
+          </div>
+        </Link>
+        <Link to="/dashboard/mitarbeiter"
+          className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Mitarbeiter</p>
+            <p className="text-sm font-semibold text-gray-900">Verwalten →</p>
+          </div>
+        </Link>
+        <Link to="/dashboard/bookings"
+          className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Buchungen</p>
+            <p className="text-sm font-semibold text-gray-900">Anzeigen →</p>
+          </div>
+        </Link>
+        <Link to="/dashboard/abonnement"
+          className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Abonnement</p>
+            <p className="text-sm font-semibold text-gray-900">Verwalten →</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Mobile: today's schedule */}
+      <div className="md:hidden">
+        <SchedulePanel schedule={data?.todaySchedule ?? []} loading={isLoading} />
+      </div>
+
+      {/* Desktop: full management panels */}
+      <div className={`hidden md:grid gap-4 ${isRestaurant ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
         <ServicesPanel businessId={businessId!} />
         <StaffPanel    businessId={businessId!} />
         {isRestaurant && <TablesPanel businessId={businessId!} />}
       </div>
 
-      {/* Bottom row */}
-      <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+      {/* Desktop: bottom row */}
+      <div className="hidden md:grid md:grid-cols-2 gap-4">
         <HoursPanel businessId={businessId!} />
         <SchedulePanel schedule={data?.todaySchedule ?? []} loading={isLoading} />
       </div>
@@ -201,7 +241,7 @@ function ServicesPanel({ businessId }: { businessId: string }) {
                   <p className="text-xs text-gray-400">{s.durationMinutes} Min · CHF {s.price.toFixed(2)}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => startEdit(s)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
+                  <button onClick={() => startEdit(s)} className="text-xs text-gray-500 hover:text-gray-900 hover:underline">Bearbeiten</button>
                   <button onClick={() => deleteMut.mutate(s.id)} className="text-xs text-red-400 hover:underline">Entfernen</button>
                 </div>
               </div>
@@ -214,7 +254,7 @@ function ServicesPanel({ businessId }: { businessId: string }) {
       </div>
 
       {hasMore && (
-        <Link to="/dashboard/dienstleistungen" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+        <Link to="/dashboard/dienstleistungen" className="block text-xs text-gray-400 mt-1 hover:text-gray-900">
           + {filtered.length - PREVIEW_LIMIT} weitere →
         </Link>
       )}
@@ -227,7 +267,7 @@ function ServicesPanel({ businessId }: { businessId: string }) {
           saving={createMut.isPending}
         />
       ) : (
-        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-indigo-600 hover:underline">
+        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-green-700 hover:underline">
           + Hinzufügen
         </button>
       )}
@@ -252,23 +292,23 @@ function InlineServiceForm({ form, setForm, onSave, onCancel, saving }: {
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         className={inputCls}
       />
-      <div className="flex gap-2 items-end">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <p className="text-xs text-gray-400 mb-1">Dauer (Min)</p>
           <input type="number" value={form.durationMinutes}
             onChange={e => setForm(f => ({ ...f, durationMinutes: +e.target.value }))}
-            className={`${inputCls} w-28`}
+            className={inputCls}
           />
         </div>
         <div>
           <p className="text-xs text-gray-400 mb-1">Preis (CHF)</p>
           <input type="number" step="0.01" value={form.price}
             onChange={e => setForm(f => ({ ...f, price: +e.target.value }))}
-            className={`${inputCls} w-28`}
+            className={inputCls}
           />
         </div>
-        <SaveCancelButtons onSave={onSave} onCancel={onCancel} saving={saving} />
       </div>
+      <SaveCancelButtons onSave={onSave} onCancel={onCancel} saving={saving} />
     </div>
   )
 }
@@ -352,7 +392,7 @@ function StaffPanel({ businessId }: { businessId: string }) {
                   <p className="text-xs text-gray-400 truncate">{s.email}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => startEdit(s)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
+                  <button onClick={() => startEdit(s)} className="text-xs text-gray-500 hover:text-gray-900 hover:underline">Bearbeiten</button>
                   <button onClick={() => deleteMut.mutate(s.id)} className="text-xs text-red-400 hover:underline">Entfernen</button>
                 </div>
               </div>
@@ -365,7 +405,7 @@ function StaffPanel({ businessId }: { businessId: string }) {
       </div>
 
       {hasMore && (
-        <Link to="/dashboard/mitarbeiter" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+        <Link to="/dashboard/mitarbeiter" className="block text-xs text-gray-400 mt-1 hover:text-gray-900">
           + {filtered.length - PREVIEW_LIMIT} weitere →
         </Link>
       )}
@@ -381,7 +421,7 @@ function StaffPanel({ businessId }: { businessId: string }) {
           </div>
         </div>
       ) : (
-        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-indigo-600 hover:underline">
+        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-green-700 hover:underline">
           + Hinzufügen
         </button>
       )}
@@ -452,16 +492,16 @@ function TablesPanel({ businessId }: { businessId: string }) {
           <div key={t.id}>
             {editId === t.id ? (
               <div className="py-2 space-y-2">
-                <div className="flex gap-2 items-end">
+                <div className="grid grid-cols-2 gap-2">
                   <input placeholder="Name" value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={`${inputCls} flex-1`} />
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} />
                   <div>
                     <p className="text-xs text-gray-400 mb-1">Personen</p>
                     <input type="number" min={1} value={form.capacity}
-                      onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={`${inputCls} w-20`} />
+                      onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={inputCls} />
                   </div>
-                  <SaveCancelButtons onSave={() => updateMut.mutate(t)} onCancel={() => setEditId(null)} saving={updateMut.isPending} />
                 </div>
+                <SaveCancelButtons onSave={() => updateMut.mutate(t)} onCancel={() => setEditId(null)} saving={updateMut.isPending} />
               </div>
             ) : (
               <div className="flex items-center justify-between py-2 px-1">
@@ -470,7 +510,7 @@ function TablesPanel({ businessId }: { businessId: string }) {
                   <p className="text-xs text-gray-400">{t.capacity} Personen</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => startEdit(t)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
+                  <button onClick={() => startEdit(t)} className="text-xs text-gray-500 hover:text-gray-900 hover:underline">Bearbeiten</button>
                   <button onClick={() => deleteMut.mutate(t.id)} className="text-xs text-red-400 hover:underline">Entfernen</button>
                 </div>
               </div>
@@ -483,26 +523,26 @@ function TablesPanel({ businessId }: { businessId: string }) {
       </div>
 
       {hasMore && (
-        <Link to="/dashboard/tische" className="block text-xs text-gray-400 mt-1 hover:text-indigo-600">
+        <Link to="/dashboard/tische" className="block text-xs text-gray-400 mt-1 hover:text-gray-900">
           + {filtered.length - PREVIEW_LIMIT} weitere →
         </Link>
       )}
 
       {open ? (
         <div className="py-2 space-y-2">
-          <div className="flex gap-2 items-end">
+          <div className="grid grid-cols-2 gap-2">
             <input placeholder="Name (z.B. Tisch 1)" value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={`${inputCls} flex-1`} />
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} />
             <div>
               <p className="text-xs text-gray-400 mb-1">Personen</p>
               <input type="number" min={1} value={form.capacity}
-                onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={`${inputCls} w-20`} />
+                onChange={e => setForm(f => ({ ...f, capacity: +e.target.value }))} className={inputCls} />
             </div>
-            <SaveCancelButtons onSave={() => createMut.mutate()} onCancel={() => setOpen(false)} saving={createMut.isPending} />
           </div>
+          <SaveCancelButtons onSave={() => createMut.mutate()} onCancel={() => setOpen(false)} saving={createMut.isPending} />
         </div>
       ) : (
-        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-indigo-600 hover:underline">
+        <button onClick={() => setOpen(true)} className="mt-2 text-xs text-green-700 hover:underline">
           + Hinzufügen
         </button>
       )}
@@ -566,18 +606,18 @@ function HoursPanel({ businessId }: { businessId: string }) {
             <label className="flex items-center gap-1 cursor-pointer shrink-0">
               <input type="checkbox" checked={h.isClosed}
                 onChange={e => setDay(i, { isClosed: e.target.checked })}
-                className="accent-indigo-600" />
+                className="accent-gray-900" />
               <span className="text-xs text-gray-400">Zu</span>
             </label>
             {!h.isClosed ? (
               <>
                 <input type="time" value={h.openTime}
                   onChange={e => setDay(i, { openTime: e.target.value })}
-                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:border-gray-900" />
                 <span className="text-gray-300 text-xs">–</span>
                 <input type="time" value={h.closeTime}
                   onChange={e => setDay(i, { closeTime: e.target.value })}
-                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:border-gray-900" />
               </>
             ) : (
               <span className="text-xs text-gray-300">Geschlossen</span>
@@ -588,7 +628,7 @@ function HoursPanel({ businessId }: { businessId: string }) {
       <button
         onClick={() => saveMut.mutate()}
         disabled={saveMut.isPending}
-        className="mt-3 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+        className="mt-3 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-60"
       >
         {saved ? 'Gespeichert ✓' : saveMut.isPending ? 'Wird gespeichert…' : 'Speichern'}
       </button>
@@ -642,41 +682,40 @@ function BookingLinkPanel({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-indigo-700 mb-1">Buchungslink für Kunden</p>
-          <p className="text-sm text-indigo-900 font-mono truncate mb-3">{url}</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={copy}
-              className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              {copied ? 'Kopiert ✓' : 'Link kopieren'}
-            </button>
-            <button
-              onClick={() => setShowQr(v => !v)}
-              className="text-xs border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-            >
-              {showQr ? 'QR-Code ausblenden' : 'QR-Code anzeigen'}
-            </button>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-            >
-              Vorschau →
-            </a>
-          </div>
-        </div>
-        {showQr && (
-          <div className="bg-white p-3 rounded-xl border border-indigo-100 shrink-0">
-            <QRCodeSVG value={url} size={120} />
-            <p className="text-xs text-center text-gray-400 mt-1">Zum Drucken</p>
-          </div>
-        )}
+    <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Buchungslink</p>
+
+      {/* URL + copy row */}
+      <div className="flex items-center gap-2 mb-3">
+        <p className="text-sm text-gray-600 font-mono truncate flex-1">{url}</p>
+        <button
+          onClick={copy}
+          className="shrink-0 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+        >
+          {copied ? '✓ Kopiert' : 'Kopieren'}
+        </button>
       </div>
+
+      {/* Secondary actions */}
+      <div className="flex gap-2">
+        <a href={url} target="_blank" rel="noopener noreferrer"
+          className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+          Vorschau →
+        </a>
+        <button
+          onClick={() => setShowQr(v => !v)}
+          className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors hidden sm:block"
+        >
+          {showQr ? 'QR ausblenden' : 'QR-Code'}
+        </button>
+      </div>
+
+      {showQr && (
+        <div className="mt-3 bg-white p-3 rounded-xl border border-gray-200 w-fit">
+          <QRCodeSVG value={url} size={120} />
+          <p className="text-xs text-center text-gray-400 mt-1">Zum Drucken</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -696,12 +735,12 @@ function PanelCard({ title, count, allLink, allCount, children }: {
         <h2 className="text-sm font-semibold text-gray-700">{title}</h2>
         <div className="flex items-center gap-2">
           {count !== undefined && (
-            <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
               {count}
             </span>
           )}
           {allLink && (
-            <Link to={allLink} className="text-xs text-gray-400 hover:text-indigo-600 transition-colors">
+            <Link to={allLink} className="text-xs text-gray-400 hover:text-gray-900 transition-colors">
               Alle anzeigen ({allCount}) →
             </Link>
           )}
@@ -718,7 +757,7 @@ function SaveCancelButtons({ onSave, onCancel, saving }: {
   return (
     <div className="flex gap-1 shrink-0">
       <button onClick={onSave} disabled={saving}
-        className="text-xs bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-60">
+        className="text-xs bg-gray-900 text-white px-2.5 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-60">
         {saving ? '…' : '✓'}
       </button>
       <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 px-1.5">✕</button>
@@ -726,4 +765,4 @@ function SaveCancelButtons({ onSave, onCancel, saving }: {
   )
 }
 
-const inputCls = 'w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400'
+const inputCls = 'w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-gray-900'

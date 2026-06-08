@@ -67,7 +67,6 @@ export function StepPayment(props: Props) {
       <PaymentForm
         state={props.state}
         business={props.business}
-        clientSecret={clientSecret}
         onBookingCreated={props.onBookingCreated}
         onComplete={props.onComplete}
         onBack={props.onBack}
@@ -79,14 +78,12 @@ export function StepPayment(props: Props) {
 function PaymentForm({
   state,
   business,
-  clientSecret,
   onBookingCreated,
   onComplete,
   onBack,
 }: {
   state: BookingState
   business: BusinessPublicResponse
-  clientSecret: string
   onBookingCreated: (bookingId: string, clientSecret: string | null) => void
   onComplete: () => void
   onBack: () => void
@@ -191,7 +188,7 @@ function PaymentForm({
           <button
             type="submit"
             disabled={!stripe || !elementReady || paying}
-            className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+            className="flex-1 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-60 transition-colors"
           >
             {paying ? 'Wird verarbeitet…' : `CHF ${state.service?.price.toFixed(2)} bezahlen`}
           </button>

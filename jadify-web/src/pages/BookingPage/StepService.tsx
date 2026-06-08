@@ -16,43 +16,42 @@ export function StepService({ services, selectedStaff, onSelect, onBack }: Props
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Leistung wählen</h2>
-      {selectedStaff && (
-        <p className="text-sm text-gray-500 mb-4">Leistungen von {selectedStaff.name}</p>
-      )}
-      {!selectedStaff && (
-        <p className="text-sm text-gray-500 mb-4">Alle verfügbaren Leistungen</p>
-      )}
+      <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-1">Leistung wählen</h2>
+      <p className="text-sm text-gray-500 mb-5">
+        {selectedStaff ? `Leistungen von ${selectedStaff.name}` : 'Alle verfügbaren Leistungen'}
+      </p>
 
       {visible.length === 0 && (
-        <p className="text-gray-500">Momentan keine Leistungen verfügbar.</p>
+        <p className="text-gray-500 text-sm py-4">Momentan keine Leistungen verfügbar.</p>
       )}
 
-      <div className="grid gap-3 mb-6">
+      <div className="grid gap-2 mb-6">
         {visible.map(service => (
           <button
             key={service.id}
             onClick={() => onSelect(service)}
             className="w-full text-left bg-white border border-gray-200 rounded-xl p-4
-              hover:border-indigo-400 hover:shadow-sm transition-all group"
+              hover:border-gray-900 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 group"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-medium text-gray-900 group-hover:text-indigo-600">{service.name}</p>
+                <p className="font-semibold text-gray-900 text-sm">{service.name}</p>
                 {service.description && (
-                  <p className="text-sm text-gray-500 mt-0.5">{service.description}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{service.description}</p>
                 )}
-                <p className="text-sm text-gray-500 mt-1">{service.durationMinutes} min</p>
+                <p className="text-xs text-gray-400 mt-1">{service.durationMinutes} min</p>
               </div>
-              <span className="font-semibold text-gray-900 text-lg">
-                CHF {service.price.toFixed(2)}
-              </span>
+              <div className="text-right shrink-0">
+                <span className="text-base font-black text-gray-900">
+                  CHF {service.price.toFixed(2)}
+                </span>
+              </div>
             </div>
           </button>
         ))}
       </div>
 
-      <button onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
+      <button onClick={onBack} className="text-sm text-gray-400 hover:text-gray-700 transition-colors">
         ← Zurück
       </button>
     </div>

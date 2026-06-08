@@ -128,6 +128,33 @@ public class AuthService(
         return await IssueTokensAsync(user, business.Id, business.Type, business.Slug, ct);
     }
 
+    public async Task ForgotPasswordAsync(string email, CancellationToken ct = default)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+        // Always return success to prevent email enumeration
+        if (user is null) return;
+
+        var token      = await userManager.GeneratePasswordResetTokenAsync(user);
+        var frontendUrl = config["FrontendUrl"] ?? "https://app.jadify.ch";
+        var resetUrl   = $"{frontendUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+
+        try { await emailService.SendPasswordResetAsync(email, resetUrl, ct); }
+        catch (Exception ex) { logger.LogWarning(ex, "Password reset email failed for {Email}", email); }
+    }
+
+    public async Task ResetPasswordAsync(string email, string token, string newPassword, CancellationToken ct = default)
+    {
+        var user = await userManager.FindByEmailAsync(email)
+            ?? throw new InvalidOperationException("Ungültige Anfrage");
+
+        var result = await userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Passwort konnte nicht zurückgesetzt werden: {errors}");
+        }
+    }
+
     // -------------------------------------------------------------------------
 
     private async Task<AuthResponse> IssueTokensAsync(IdentityUser user, Guid businessId, BusinessType businessType, string slug, CancellationToken ct)

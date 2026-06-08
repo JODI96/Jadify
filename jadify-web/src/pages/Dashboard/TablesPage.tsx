@@ -1,10 +1,10 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../store/authStore'
 import { tableApi, type TableResponse } from '../../api'
 
-const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400'
+const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500'
 
 export function TablesPage() {
   const { businessId } = useAuth()
@@ -60,7 +60,7 @@ export function TablesPage() {
         <Link to="/dashboard/overview" className="text-sm text-gray-400 hover:text-gray-600">← Admin-Panel</Link>
         <span className="text-gray-200">/</span>
         <h1 className="text-xl font-semibold text-gray-900">Tische</h1>
-        <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium ml-auto">
+        <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium ml-auto">
           {tables.filter(t => t.isActive).length} aktiv
         </span>
       </div>
@@ -71,12 +71,12 @@ export function TablesPage() {
           placeholder="Suchen…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         {!showForm && !editItem && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shrink-0"
+            className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 shrink-0"
           >
             + Hinzufügen
           </button>
@@ -96,7 +96,7 @@ export function TablesPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => createMut.mutate()} disabled={createMut.isPending}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60">
+              className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 disabled:opacity-60">
               {createMut.isPending ? 'Wird gespeichert…' : 'Speichern'}
             </button>
             <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
@@ -119,7 +119,7 @@ export function TablesPage() {
           {filtered.map(t => (
             <div key={t.id}>
               {editItem?.id === t.id ? (
-                <div className="bg-gray-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+                <div className="bg-gray-50 border border-green-200 rounded-xl p-4 space-y-3">
                   <p className="text-sm font-medium text-gray-700">Bearbeiten</p>
                   <input placeholder="Name" value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} />
@@ -130,7 +130,7 @@ export function TablesPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => updateMut.mutate(t)} disabled={updateMut.isPending}
-                      className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60">
+                      className="bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-800 disabled:opacity-60">
                       {updateMut.isPending ? '…' : 'Speichern'}
                     </button>
                     <button onClick={() => setEditItem(null)} className="text-sm text-gray-500 hover:text-gray-700">
@@ -154,7 +154,7 @@ export function TablesPage() {
                     </span>
                   </div>
                   <div className="flex gap-2 pt-1 border-t border-gray-100">
-                    <button onClick={() => startEdit(t)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
+                    <button onClick={() => startEdit(t)} className="text-xs text-green-600 hover:underline">Bearbeiten</button>
                     <button onClick={() => toggleMut.mutate(t)} className="text-xs text-gray-400 hover:underline">
                       {t.isActive ? 'Deaktivieren' : 'Aktivieren'}
                     </button>

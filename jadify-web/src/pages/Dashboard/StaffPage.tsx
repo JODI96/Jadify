@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../store/authStore'
 import { staffOwnerApi, serviceOwnerApi, type StaffOwnerResponse, type ServiceOwnerResponse, type StaffHoursDto } from '../../api'
 
-const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400'
+const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500'
 
 const DAY_LABELS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 
@@ -13,7 +13,7 @@ function initials(name: string) {
 }
 
 function StaffAvatar({ name, avatarUrl, size = 40 }: { name: string; avatarUrl?: string; size?: number }) {
-  const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500']
+  const colors = ['bg-green-600', 'bg-green-600', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500']
   const color = colors[name.charCodeAt(0) % colors.length]
   if (avatarUrl) {
     return <img src={avatarUrl} alt={name} style={{ width: size, height: size }} className="rounded-full object-cover shrink-0" />
@@ -89,7 +89,7 @@ function StaffHoursPanel({ staffId, onClose }: { staffId: string; onClose: () =>
             <button
               onClick={() => toggle(h.dayOfWeek)}
               className={`w-8 h-8 rounded-full text-xs font-bold shrink-0 transition-colors ${
-                h.isWorking ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-400'
+                h.isWorking ? 'bg-green-700 text-white' : 'bg-gray-200 text-gray-400'
               }`}
             >
               {DAY_LABELS[h.dayOfWeek]}
@@ -100,14 +100,14 @@ function StaffHoursPanel({ staffId, onClose }: { staffId: string; onClose: () =>
                   type="time"
                   value={h.startTime}
                   onChange={e => setTime(h.dayOfWeek, 'startTime', e.target.value)}
-                  className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
                 />
                 <span className="text-xs text-gray-400">–</span>
                 <input
                   type="time"
                   value={h.endTime}
                   onChange={e => setTime(h.dayOfWeek, 'endTime', e.target.value)}
-                  className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
                 />
               </>
             ) : (
@@ -121,7 +121,7 @@ function StaffHoursPanel({ staffId, onClose }: { staffId: string; onClose: () =>
         <button
           onClick={() => saveMut.mutate()}
           disabled={saveMut.isPending}
-          className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-700 disabled:opacity-60"
+          className="bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-800 disabled:opacity-60"
         >
           {saveMut.isPending ? 'Wird gespeichert…' : 'Speichern'}
         </button>
@@ -185,7 +185,7 @@ function StaffForm({
                   type="checkbox"
                   checked={form.serviceIds.includes(s.id)}
                   onChange={() => toggleService(s.id)}
-                  className="accent-indigo-600"
+                  className="accent-green-700"
                 />
                 <span className="text-xs text-gray-700 truncate">{s.name}</span>
               </label>
@@ -196,7 +196,7 @@ function StaffForm({
 
       <div className="flex gap-2 pt-1">
         <button onClick={onSave} disabled={saving}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-60">
+          className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 disabled:opacity-60">
           {saving ? 'Wird gespeichert…' : 'Speichern'}
         </button>
         <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
@@ -292,17 +292,17 @@ export function StaffPage() {
         <Link to="/dashboard/overview" className="text-sm text-gray-400 hover:text-gray-600">← Admin-Panel</Link>
         <span className="text-gray-200">/</span>
         <h1 className="text-xl font-semibold text-gray-900">Mitarbeiter</h1>
-        <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium ml-auto">
+        <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium ml-auto">
           {staff.filter(s => s.isActive).length} aktiv
         </span>
       </div>
 
       <div className="flex gap-3 mb-4">
         <input placeholder="Suchen…" value={search} onChange={e => setSearch(e.target.value)}
-          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
         {!showForm && !editItem && (
           <button onClick={openNew}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shrink-0">
+            className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800 shrink-0">
             + Hinzufügen
           </button>
         )}
@@ -360,11 +360,11 @@ export function StaffPage() {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => toggleHours(s.id)}
-                        className={`text-xs hover:underline ${hoursStaffId === s.id ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}
+                        className={`text-xs hover:underline ${hoursStaffId === s.id ? 'text-green-700 font-medium' : 'text-gray-400'}`}
                       >
                         Zeiten
                       </button>
-                      <button onClick={() => startEdit(s)} className="text-xs text-indigo-500 hover:underline">Bearbeiten</button>
+                      <button onClick={() => startEdit(s)} className="text-xs text-green-600 hover:underline">Bearbeiten</button>
                       <button onClick={() => toggleMut.mutate(s)} className="text-xs text-gray-400 hover:underline">
                         {s.isActive ? 'Deaktivieren' : 'Aktivieren'}
                       </button>

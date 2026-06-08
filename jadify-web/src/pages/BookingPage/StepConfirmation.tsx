@@ -1,4 +1,4 @@
-import type { BookingState } from './index'
+﻿import type { BookingState } from './index'
 import type { BusinessPublicResponse } from '../../api'
 
 interface Props {
@@ -56,7 +56,7 @@ export function StepConfirmation({ state, business }: Props) {
 
       <button
         onClick={() => window.location.reload()}
-        className="mt-6 text-sm text-indigo-600 hover:text-indigo-800 underline"
+        className="mt-6 text-sm text-green-700 hover:text-green-900 underline"
       >
         Weiteren Termin buchen
       </button>

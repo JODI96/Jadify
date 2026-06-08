@@ -89,6 +89,10 @@ export const authApi = {
   }) => api.post<AuthResponse>('/auth/register', body),
   refresh: (refreshToken: string) =>
     api.post<AuthResponse>('/auth/refresh', { refreshToken }),
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>('/auth/forgot-password', { email }),
+  resetPassword: (email: string, token: string, newPassword: string) =>
+    api.post<{ message: string }>('/auth/reset-password', { email, token, newPassword }),
 }
 
 export const dashboardApi = {
