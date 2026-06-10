@@ -183,6 +183,62 @@ public class StaffController(JadifyDbContext db, IServiceProvider services, ICon
         return Ok(member.AvatarUrl);
     }
 
+    // ── Staff blocks ──────────────────────────────────────────────────────────
+
+    [HttpGet("api/staff/{staffId:guid}/blocks")]
+    public async Task<ActionResult<IReadOnlyList<StaffBlockResponse>>> ListBlocks(
+        Guid staffId, CancellationToken ct)
+    {
+        var member = await db.Staff.FindAsync([staffId], ct)
+            ?? throw new KeyNotFoundException($"Staff member {staffId} not found");
+        await VerifyOwnershipAsync(member.BusinessId, ct);
+
+        var blocks = await db.StaffBlocks
+            .Where(b => b.StaffId == staffId)
+            .OrderBy(b => b.StartDate)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        return Ok(blocks.Select(b => new StaffBlockResponse(b.Id, b.StartDate, b.EndDate, b.Reason, b.CreatedAt)).ToList());
+    }
+
+    [HttpPost("api/staff/{staffId:guid}/blocks")]
+    public async Task<ActionResult<StaffBlockResponse>> CreateBlock(
+        Guid staffId, CreateStaffBlockRequest request, CancellationToken ct)
+    {
+        var member = await db.Staff.FindAsync([staffId], ct)
+            ?? throw new KeyNotFoundException($"Staff member {staffId} not found");
+        await VerifyOwnershipAsync(member.BusinessId, ct);
+
+        if (request.EndDate < request.StartDate)
+            return BadRequest("EndDate must be >= StartDate");
+
+        var block = new Jadify.API.Shared.Models.StaffBlock
+        {
+            StaffId   = staffId,
+            StartDate = request.StartDate,
+            EndDate   = request.EndDate,
+            Reason    = request.Reason,
+        };
+        db.StaffBlocks.Add(block);
+        await db.SaveChangesAsync(ct);
+
+        return CreatedAtAction(nameof(ListBlocks), new { staffId },
+            new StaffBlockResponse(block.Id, block.StartDate, block.EndDate, block.Reason, block.CreatedAt));
+    }
+
+    [HttpDelete("api/staff/blocks/{id:guid}")]
+    public async Task<IActionResult> DeleteBlock(Guid id, CancellationToken ct)
+    {
+        var block = await db.StaffBlocks.Include(b => b.Staff).FirstOrDefaultAsync(b => b.Id == id, ct)
+            ?? throw new KeyNotFoundException($"Block {id} not found");
+        await VerifyOwnershipAsync(block.Staff.BusinessId, ct);
+
+        db.StaffBlocks.Remove(block);
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
     private async Task VerifyOwnershipAsync(Guid businessId, CancellationToken ct)
     {
         var ownerId = User.GetUserId()!;

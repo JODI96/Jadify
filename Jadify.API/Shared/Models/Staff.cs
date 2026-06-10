@@ -14,5 +14,6 @@ public class Staff
 
     public ICollection<StaffService> StaffServices { get; set; } = new List<StaffService>();
     public ICollection<StaffHours> StaffHours { get; set; } = new List<StaffHours>();
+    public ICollection<StaffBlock> StaffBlocks { get; set; } = new List<StaffBlock>();
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 }

@@ -82,6 +82,19 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
         if (staffIdList.Count == 0)
             return [];
 
+        // 4a. Remove staff who have a block covering this date
+        var blockedIds = await db.StaffBlocks
+            .AsNoTracking()
+            .Where(b => staffIdList.Contains(b.StaffId) && b.StartDate <= date && b.EndDate >= date)
+            .Select(b => b.StaffId)
+            .Distinct()
+            .ToListAsync(ct);
+        if (blockedIds.Count > 0)
+        {
+            staffIdList = staffIdList.Where(id => !blockedIds.Contains(id)).ToList();
+            if (staffIdList.Count == 0) return [];
+        }
+
         // 4. Load existing non-cancelled bookings for those staff on that date
         var dayStart = DateTimeHelper.Combine(date, TimeOnly.MinValue);
         var dayEnd   = dayStart.AddDays(1);
@@ -167,6 +180,13 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
             .Where(h => staffIds.Contains(h.StaffId))
             .ToListAsync(ct);
 
+        var monthStartDate = new DateOnly(year, month, 1);
+        var monthEndDate   = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
+        var allBlocks = await db.StaffBlocks
+            .AsNoTracking()
+            .Where(b => staffIds.Contains(b.StaffId) && b.StartDate <= monthEndDate && b.EndDate >= monthStartDate)
+            .ToListAsync(ct);
+
         var monthStart = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
         var monthEnd   = monthStart.AddMonths(1);
 
@@ -191,6 +211,9 @@ public class AvailabilityService(JadifyDbContext db) : IAvailabilityService
 
             foreach (var sid in staffIds)
             {
+                // Skip staff who have a block on this date
+                if (allBlocks.Any(b => b.StaffId == sid && b.StartDate <= date && b.EndDate >= date)) continue;
+
                 // Resolve hours for this staff member on this day
                 var personalDay = allStaffHours.FirstOrDefault(h => h.StaffId == sid && h.DayOfWeek == date.DayOfWeek);
                 TimeOnly open, close;

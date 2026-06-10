@@ -9,6 +9,7 @@ import type {
   DashboardResponse,
   ServiceOwnerResponse,
   SetBusinessHoursRequest,
+  StaffBlockResponse,
   StaffHoursDto,
   StaffOwnerResponse,
   SubscriptionResponse,
@@ -135,6 +136,15 @@ export const staffOwnerApi = {
     api.get<StaffHoursDto[]>(`/staff/${staffId}/hours`),
   setHours: (staffId: string, hours: StaffHoursDto[]) =>
     api.post<StaffHoursDto[]>(`/staff/${staffId}/hours`, { hours }),
+}
+
+export const staffBlockApi = {
+  list: (staffId: string) =>
+    api.get<StaffBlockResponse[]>(`/staff/${staffId}/blocks`),
+  create: (staffId: string, req: { startDate: string; endDate: string; reason?: string }) =>
+    api.post<StaffBlockResponse>(`/staff/${staffId}/blocks`, req),
+  remove: (id: string) =>
+    api.delete<void>(`/staff/blocks/${id}`),
 }
 
 export const tableApi = {

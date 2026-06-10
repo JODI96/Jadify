@@ -33,3 +33,17 @@ public record UpdateStaffRequest(
     string?              AvatarUrl,
     IReadOnlyList<Guid>? ServiceIds
 );
+
+public record StaffBlockResponse(
+    Guid      Id,
+    DateOnly  StartDate,
+    DateOnly  EndDate,
+    string?   Reason,
+    DateTime  CreatedAt
+);
+
+public record CreateStaffBlockRequest(
+    DateOnly StartDate,
+    DateOnly EndDate,
+    string?  Reason
+);

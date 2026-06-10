@@ -160,6 +160,14 @@ export interface TableResponse {
   createdAt: string
 }
 
+export interface StaffBlockResponse {
+  id: string
+  startDate: string  // yyyy-MM-dd
+  endDate: string
+  reason?: string
+  createdAt: string
+}
+
 export interface UpdateBusinessRequest {
   name: string
   type: string

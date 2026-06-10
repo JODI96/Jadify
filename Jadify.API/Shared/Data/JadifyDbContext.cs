@@ -19,6 +19,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
     public DbSet<Payment>       Payments      => Set<Payment>();
     public DbSet<Table>         Tables        => Set<Table>();
     public DbSet<StaffHours>    StaffHours    => Set<StaffHours>();
+    public DbSet<StaffBlock>    StaffBlocks   => Set<StaffBlock>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +36,7 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
         ConfigurePayment(builder);
         ConfigureTable(builder);
         ConfigureStaffHours(builder);
+        ConfigureStaffBlock(builder);
     }
 
     private static void ConfigureBusiness(ModelBuilder builder)
@@ -209,6 +211,20 @@ public class JadifyDbContext(DbContextOptions<JadifyDbContext> options)
              .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(sh => new { sh.StaffId, sh.DayOfWeek });
+        });
+    }
+
+    private static void ConfigureStaffBlock(ModelBuilder builder)
+    {
+        builder.Entity<StaffBlock>(e =>
+        {
+            e.HasOne(b => b.Staff)
+             .WithMany(s => s.StaffBlocks)
+             .HasForeignKey(b => b.StaffId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            // Availability queries: find blocks by staff + date range
+            e.HasIndex(b => new { b.StaffId, b.StartDate, b.EndDate });
         });
     }
 }

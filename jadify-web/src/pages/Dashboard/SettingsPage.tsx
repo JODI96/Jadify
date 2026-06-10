@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../store/authStore'
-import { businessApi, serviceOwnerApi, staffOwnerApi } from '../../api'
-import type { ServiceOwnerResponse, StaffOwnerResponse } from '../../api'
+import { businessApi, serviceOwnerApi, staffOwnerApi, staffBlockApi } from '../../api'
+import type { ServiceOwnerResponse, StaffOwnerResponse, StaffBlockResponse } from '../../api'
 
 const TABS = ['Profil', 'Dienstleistungen', 'Mitarbeiter', 'Öffnungszeiten'] as const
 type Tab = typeof TABS[number]
@@ -344,16 +344,12 @@ function StaffTab() {
           <p className="p-4 text-sm text-gray-400">Noch keine Mitarbeiter</p>
         )}
         {staff.map(s => (
-          <div key={s.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-gray-800">{s.name}</p>
-              <p className="text-xs text-gray-400">{s.email}</p>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => openEdit(s)} className="text-xs text-green-700 hover:underline">Bearbeiten</button>
-              <button onClick={() => deleteMutation.mutate(s.id)} className="text-xs text-red-500 hover:underline">Entfernen</button>
-            </div>
-          </div>
+          <StaffRow
+            key={s.id}
+            member={s}
+            onEdit={() => openEdit(s)}
+            onDelete={() => deleteMutation.mutate(s.id)}
+          />
         ))}
       </div>
 
@@ -396,6 +392,166 @@ function StaffTab() {
       {!showForm && !editItem && (
         <button onClick={() => setShowForm(true)} className="text-sm text-green-700 hover:underline">
           + Mitarbeiter hinzufügen
+        </button>
+      )}
+    </div>
+  )
+}
+
+function StaffRow({ member, onEdit, onDelete }: {
+  member: StaffOwnerResponse
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <div className="flex items-center justify-between px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-gray-800">{member.name}</p>
+          <p className="text-xs text-gray-400">{member.email}</p>
+        </div>
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          >
+            <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            Abwesenheiten
+          </button>
+          <button onClick={onEdit} className="text-xs text-green-700 hover:underline">Bearbeiten</button>
+          <button onClick={onDelete} className="text-xs text-red-500 hover:underline">Entfernen</button>
+        </div>
+      </div>
+      {open && <StaffBlocksSection staffId={member.id} staffName={member.name} />}
+    </div>
+  )
+}
+
+function StaffBlocksSection({ staffId, staffName }: { staffId: string; staffName: string }) {
+  const qc = useQueryClient()
+  const [showForm, setShowForm] = useState(false)
+  const today = new Date().toISOString().slice(0, 10)
+  const [form, setForm] = useState({ startDate: today, endDate: today, reason: '' })
+
+  const { data: blocks = [], isLoading } = useQuery({
+    queryKey: ['staff-blocks', staffId],
+    queryFn: () => staffBlockApi.list(staffId),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () => staffBlockApi.create(staffId, {
+      startDate: form.startDate,
+      endDate: form.endDate,
+      reason: form.reason || undefined,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['staff-blocks', staffId] })
+      setShowForm(false)
+      setForm({ startDate: today, endDate: today, reason: '' })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => staffBlockApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['staff-blocks', staffId] }),
+  })
+
+  function formatDate(d: string) {
+    return new Date(d + 'T00:00:00').toLocaleDateString('de-CH', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  return (
+    <div className="bg-gray-50 border-t border-gray-100 px-4 py-3 space-y-3">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+        Abwesenheiten – {staffName}
+      </p>
+
+      {isLoading && <p className="text-xs text-gray-400">Wird geladen…</p>}
+
+      {!isLoading && blocks.length === 0 && !showForm && (
+        <p className="text-xs text-gray-400">Keine eingetragenen Abwesenheiten</p>
+      )}
+
+      {blocks.map(b => (
+        <div key={b.id} className="flex items-center justify-between bg-white rounded-lg border border-gray-200 px-3 py-2">
+          <div>
+            <p className="text-xs font-medium text-gray-800">
+              {formatDate(b.startDate)}
+              {b.startDate !== b.endDate && <> – {formatDate(b.endDate)}</>}
+            </p>
+            {b.reason && <p className="text-xs text-gray-400 mt-0.5">{b.reason}</p>}
+          </div>
+          <button
+            onClick={() => deleteMutation.mutate(b.id)}
+            disabled={deleteMutation.isPending}
+            className="text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
+            title="Löschen"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+
+      {showForm ? (
+        <div className="bg-white rounded-lg border border-gray-200 p-3 grid gap-2">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 mb-1 block">Von</label>
+              <input
+                type="date"
+                value={form.startDate}
+                min={today}
+                onChange={e => setForm(f => ({ ...f, startDate: e.target.value, endDate: e.target.value > f.endDate ? e.target.value : f.endDate }))}
+                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 mb-1 block">Bis</label>
+              <input
+                type="date"
+                value={form.endDate}
+                min={form.startDate}
+                onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
+                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+            </div>
+          </div>
+          <input
+            placeholder="Grund (optional, z.B. Urlaub, Krank)"
+            value={form.reason}
+            onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
+            className="border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending}
+              className="bg-gray-900 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-gray-700 disabled:opacity-60"
+            >
+              {createMutation.isPending ? 'Wird gespeichert…' : 'Speichern'}
+            </button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          className="text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Abwesenheit hinzufügen
         </button>
       )}
     </div>
