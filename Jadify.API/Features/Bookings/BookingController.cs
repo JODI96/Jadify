@@ -87,6 +87,22 @@ public class BookingController(
         Guid id, CancelBookingRequest request, CancellationToken ct)
         => Ok(await bookingService.CancelAsync(id, request.Reason, ct));
 
+    /// <summary>Lets a customer cancel their own booking via a secure token (no login required).</summary>
+    [HttpPost("api/bookings/{id:guid}/cancel-self")]
+    [AllowAnonymous]
+    public async Task<ActionResult<BookingResponse>> CancelByCustomer(
+        Guid id, [FromQuery] string token, CancellationToken ct)
+    {
+        try
+        {
+            return Ok(await bookingService.CancelByCustomerAsync(id, token, ct));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { message = "Ungültiger oder abgelaufener Stornierungs-Link." });
+        }
+    }
+
     /// <summary>Lists bookings for a business on a given date.</summary>
     [HttpGet("api/businesses/{businessId:guid}/bookings")]
     [Authorize]

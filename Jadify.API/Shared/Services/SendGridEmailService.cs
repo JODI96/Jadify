@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Jadify.API.Shared.Data;
 using Jadify.API.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +35,9 @@ public class SendGridEmailService(
             return;
         }
 
-        var confirmUrl = $"{_frontendUrl}/book/{booking.Business.Slug}/confirmation/{booking.Id}";
+        var confirmUrl  = $"{_frontendUrl}/book/{booking.Business.Slug}/confirmation/{booking.Id}";
+        var cancelToken = GenerateCancelToken(booking.Id);
+        var cancelUrl   = $"{_frontendUrl}/buchung/{booking.Id}/stornieren?token={cancelToken}";
         var dateStr    = booking.StartTime.ToString("dddd, d. MMMM yyyy", new System.Globalization.CultureInfo("de-CH"));
         var timeStr    = booking.StartTime.ToString("HH:mm");
 
@@ -95,8 +99,14 @@ public class SendGridEmailService(
                       </a>
                     </div>
 
+                    <!-- Cancel link -->
+                    <p style="text-align:center;margin:16px 0 0;font-size:12px;color:#9ca3af">
+                      Termin nicht mehr nötig?
+                      <a href="{cancelUrl}" style="color:#6b7280;text-decoration:underline">Buchung stornieren</a>
+                    </p>
+
                     <!-- Booking ID -->
-                    <p style="text-align:center;margin:20px 0 0;font-size:11px;color:#9ca3af;font-family:monospace">
+                    <p style="text-align:center;margin:12px 0 0;font-size:11px;color:#9ca3af;font-family:monospace">
                       Buchungsnummer: {booking.Id}
                     </p>
                   </div>
@@ -341,7 +351,9 @@ public class SendGridEmailService(
             return;
         }
 
-        var confirmUrl = $"{_frontendUrl}/book/{booking.Business.Slug}/confirmation/{booking.Id}";
+        var confirmUrl      = $"{_frontendUrl}/book/{booking.Business.Slug}/confirmation/{booking.Id}";
+        var cancelToken     = GenerateCancelToken(booking.Id);
+        var cancelUrl       = $"{_frontendUrl}/buchung/{booking.Id}/stornieren?token={cancelToken}";
         var dateStr    = booking.StartTime.ToString("dddd, d. MMMM yyyy", new System.Globalization.CultureInfo("de-CH"));
         var timeStr    = booking.StartTime.ToString("HH:mm");
         var endTimeStr = booking.EndTime.ToString("HH:mm");
@@ -389,6 +401,12 @@ public class SendGridEmailService(
                         Buchung anzeigen
                       </a>
                     </div>
+
+                    <!-- Cancel link -->
+                    <p style="text-align:center;margin:16px 0 0;font-size:12px;color:#9ca3af">
+                      Termin nicht mehr nötig?
+                      <a href="{cancelUrl}" style="color:#6b7280;text-decoration:underline">Buchung stornieren</a>
+                    </p>
                   </div>
                 </div>
                 <p style="text-align:center;margin:20px 0;font-size:12px;color:#9ca3af">
@@ -482,5 +500,13 @@ public class SendGridEmailService(
             "Melde dich an und richte dein Unternehmen ein.");
 
         await client.SendEmailAsync(msg, ct);
+    }
+
+    private string GenerateCancelToken(Guid bookingId)
+    {
+        var key = config["Jwt:Key"]!;
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
+        return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(bookingId.ToString())))
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
     }
 }

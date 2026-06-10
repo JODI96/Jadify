@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Jadify.API.Shared.Constants;
 using Jadify.API.Shared.Data;
 using Jadify.API.Shared.Enums;
@@ -14,6 +16,7 @@ public class BookingService(
     IStripeClient stripeClient,
     IHostEnvironment env,
     IEmailService emailService,
+    IConfiguration config,
     ILogger<BookingService> logger) : IBookingService
 {
     public async Task<CreatePaymentIntentResponse> CreatePaymentIntentAsync(
@@ -292,6 +295,19 @@ public class BookingService(
         )).ToList();
     }
 
+    public async Task<BookingResponse> CancelByCustomerAsync(
+        Guid bookingId, string token, CancellationToken ct = default)
+    {
+        var expected = GenerateCancelToken(bookingId);
+        var tokenBytes    = Encoding.UTF8.GetBytes(token);
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+
+        if (!CryptographicOperations.FixedTimeEquals(tokenBytes, expectedBytes))
+            throw new UnauthorizedAccessException("Invalid cancellation token");
+
+        return await CancelAsync(bookingId, "Vom Kunden storniert", ct);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<Booking> LoadBookingWithRelationsAsync(Guid bookingId, CancellationToken ct)
@@ -321,6 +337,14 @@ public class BookingService(
             b.TotalAmount, b.FeeAmount,
             clientSecret,
             b.Notes, b.CreatedAt);
+
+    internal string GenerateCancelToken(Guid bookingId)
+    {
+        var key = config["Jwt:Key"]!;
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
+        return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(bookingId.ToString())))
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+    }
 
     // Stripe amounts are always in the smallest currency unit (Rappen for CHF)
     private static long ToStripeAmount(decimal chf) => (long)(chf * 100);

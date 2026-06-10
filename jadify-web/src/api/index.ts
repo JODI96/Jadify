@@ -69,6 +69,8 @@ export const bookingApi = {
     api.put<BookingResponse>(`/bookings/${id}/confirm`, {}),
   cancel: (id: string, reason?: string) =>
     api.put<void>(`/bookings/${id}/cancel`, { reason }),
+  cancelByCustomer: (id: string, token: string) =>
+    api.post<BookingResponse>(`/bookings/${id}/cancel-self?token=${encodeURIComponent(token)}`, {}),
   forBusiness: (businessId: string, date?: string) => {
     const q = date ? `?date=${date}` : ''
     return api.get<BookingResponse[]>(`/businesses/${businessId}/bookings${q}`)

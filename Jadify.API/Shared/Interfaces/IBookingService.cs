@@ -13,4 +13,6 @@ public interface IBookingService
 
     Task<IReadOnlyList<BookingSummaryDto>> GetForBusinessAsync(
         Guid businessId, DateOnly? date, BookingStatus? status, CancellationToken ct = default);
+
+    Task<BookingResponse> CancelByCustomerAsync(Guid bookingId, string token, CancellationToken ct = default);
 }
