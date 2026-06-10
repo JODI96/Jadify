@@ -98,10 +98,6 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ReminderHoursBefore")
-                        .HasDefaultValue(24)
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -123,6 +119,9 @@ namespace Jadify.API.Shared.Data.Migrations
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("ReminderHoursBefore")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Slug")
                         .IsRequired()
